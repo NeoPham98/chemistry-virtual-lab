@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+
+<head>
+  <base href="/" />
+
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!-- <meta name="description" content="false" />
+    <meta
+      name="keywords"
+      content=""
+    /> -->
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"
+    viewport-fit="cover" />
+
+  <meta name="x5-fullscreen" content="true" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="format-detection" content="telephone=no, email=no" />
+
+  <meta name="packver" content="project/huaxue_v3.18.0-en-9" />
+  <meta name="IS_SDK" content="false" />
+  <title id='nbTitle'>THS - Phòng Thí Nghiệm Ảo</title>
+  <!-- <link rel="stylesheet" href="assets/nbQuestion/css/main.css"> -->
+  <link rel="icon" href="https://truonghocsoquocgia.vn/assets/logo/Logomark.svg" type="image/svg+xml" />
+  <script>
+    window.global = window.global || window;
+    window.__appStartTime = new Date().getTime();
+
+    // === Suppress noisy console output from bundled JS ===
+    console.log = function () { };
+    console.info = function () { };
+    console.debug = function () { };
+    console.warn = function () { };
+
+    // === LOCAL FIX: Auto-add required URL params if missing ===
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var changed = false;
+      if (!params.has('moduleId')) { params.set('moduleId', '9'); changed = true; }
+      if (!params.has('ignoreBlock')) { params.set('ignoreBlock', 'true'); changed = true; }
+      if (changed) {
+        window.location.replace(window.location.pathname + '?' + params.toString());
+      }
+    })();
+
+    // === LOCAL FIX: Unlock all VIP-gated equipment via built-in backdoor ===
+    // umi.js internally checks localStorage.getItem("un_lock_vip") to bypass VIP gate
+    localStorage.setItem('un_lock_vip', '1');
+
+    // === LOCAL FIX: Suppress PixiJS TypeError for missing texture .image ===
+    window.addEventListener('error', function (event) {
+      var msg = event.message || '';
+      // Suppress the specific TypeError: Cannot read properties of undefined (reading 'image')
+      if (msg.indexOf("reading 'image'") !== -1 || msg.indexOf('reading "image"') !== -1) {
+        console.warn('[LOCAL PATCH] Suppressed PixiJS texture error:', msg);
+        event.preventDefault();
+        event.stopPropagation();
+        return true;
+      }
+    }, true);
+
+    // Also patch PIXI loader resources after page loads
+    window.addEventListener('load', function () {
+      // Patch PIXI if available - make loader.resources a Proxy that returns safe object for undefined keys
+      setTimeout(function () {
+        try {
+          if (window.PIXI && window.PIXI.Loader) {
+            var OrigLoader = window.PIXI.Loader;
+            var origShared = OrigLoader.shared;
+            if (origShared) {
+              var origResources = origShared.resources;
+              Object.defineProperty(origShared, 'resources', {
+                get: function () {
+                  return new Proxy(origResources || {}, {
+                    get: function (target, key) {
+                      var val = target[key];
+                      if (val === undefined) {
+                        // Return a safe stub with .image property
+                        return { image: new Image(), texture: window.PIXI.Texture.EMPTY, data: null };
+                      }
+                      return val;
+                    }
+                  });
+                },
+                configurable: true
+              });
+            }
+          }
+        } catch (e) {
+          console.warn('[LOCAL PATCH] Could not patch PIXI:', e);
+        }
+      }, 2000);
+    });
+  </script>
+  <!-- docker环境变量配置 -->
+  <script src="js/snap.svg-min.js"></script>
+  <script src="assets/nb-config.js?v=project/huaxue_v3.18.0-en-9"></script>
+  <script src="js/lodash-4.17.20.min.js"></script>
+  <script src="js/jquery-3.2.1.min.js"></script>
+
+  <script src="js/sensorsdata.min-1.22.7.js"></script>
+  <script src="/js/other-login.min.js"></script>
+
+  <script src="js/keyboard.min.js"></script>
+
+  <script src="js/gt.js"></script>
+  <script src="assets/libs/tinymce/tinymce.min.js"></script>
+  <script src="assets/nb-bootstrap-common-css.js"></script>
+  <script src="js/sw.js"></script>
+
+  <script src="assets/nb-utils.min.js?v=project/huaxue_v3.18.0-en-9"></script>
+  <script src="assets/postmate.min.js?v=project/huaxue_v3.18.0-en-9"></script>
+
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- <link rel="stylesheet" href="/static/quill.bubble.css"> -->
+  <!-- <link href="/static/quill.snow.css" rel="stylesheet"> -->
+  <!-- <script src="/js/quill.min.js"></script> -->
+
+  <!-- 微信分享 -->
+  <!-- <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script> -->
+  <link rel="shortcut icon" type="image/x-icon" href="chem.ico" />
+  <style>
+    /* LOCAL FIX: Hide back, save, teaching demo buttons */
+    .goback___3-rSP,
+    .save___j3q2q,
+    .preview___2H8al,
+    .headerCenter___3ybzU {
+      display: none !important;
+    }
+
+    /* LOCAL FIX: Hide equipment lock icons */
+    .lockWrap___18q_Z,
+    [data-testid="lock-icon"] {
+      display: none !important;
+    }
+
+    /* ===== LOCAL FIX: Restyle confirm/alert dialog popup ===== */
+    /* Overlay */
+    .ant-modal-mask {
+      background: rgba(0, 0, 0, 0.55) !important;
+      backdrop-filter: blur(3px) !important;
+    }
+
+    /* Modal box */
+    .ant-modal-confirm .ant-modal-content,
+    .ant-modal-content {
+      border-radius: 16px !important;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22) !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
+
+    /* Body area */
+    .ant-modal-confirm-body-wrapper {
+      padding: 32px 28px 24px !important;
+    }
+
+    /* Icon area (if any) */
+    .ant-modal-confirm-body>.anticon {
+      display: none !important;
+    }
+
+    /* Title */
+    .ant-modal-confirm-title {
+      font-size: 18px !important;
+      font-weight: 700 !important;
+      color: #1a1a2e !important;
+      text-align: center !important;
+      margin-bottom: 10px !important;
+      letter-spacing: 0.3px !important;
+    }
+
+    /* Content text */
+    .ant-modal-confirm-content {
+      font-size: 14px !important;
+      color: #6b7280 !important;
+      text-align: center !important;
+      line-height: 1.65 !important;
+      margin-top: 8px !important;
+    }
+
+    /* Buttons row */
+    .ant-modal-confirm-btns {
+      display: flex !important;
+      justify-content: center !important;
+      gap: 12px !important;
+      margin-top: 24px !important;
+      padding-bottom: 4px !important;
+    }
+
+    /* Cancel button */
+    .ant-modal-confirm-btns .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous) {
+      border-radius: 8px !important;
+      height: 38px !important;
+      padding: 0 22px !important;
+      font-size: 14px !important;
+      font-weight: 500 !important;
+      border: 1.5px solid #d1d5db !important;
+      color: #374151 !important;
+      background: #fff !important;
+      transition: all 0.2s !important;
+    }
+
+    .ant-modal-confirm-btns .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous):hover {
+      border-color: #f97316 !important;
+      color: #f97316 !important;
+    }
+
+    /* Primary/confirm button (orange) */
+    .ant-modal-confirm-btns .ant-btn-primary,
+    .ant-modal-confirm-btns .ant-btn-dangerous {
+      border-radius: 8px !important;
+      height: 38px !important;
+      padding: 0 22px !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      background: linear-gradient(135deg, #f97316, #ea580c) !important;
+      border: none !important;
+      color: #fff !important;
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35) !important;
+      transition: all 0.2s !important;
+    }
+
+    .ant-modal-confirm-btns .ant-btn-primary:hover,
+    .ant-modal-confirm-btns .ant-btn-dangerous:hover {
+      background: linear-gradient(135deg, #ea580c, #c2410c) !important;
+      box-shadow: 0 6px 18px rgba(249, 115, 22, 0.45) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    /* Close X button */
+    .ant-modal-close {
+      top: 14px !important;
+      right: 14px !important;
+    }
+
+    .ant-modal-close-x {
+      color: #9ca3af !important;
+      font-size: 16px !important;
+    }
+
+    /* ===== Restyle: real confirm popup classes ===== */
+    .ant-modal-body:has(.title___2X-91) {
+      padding: 0 !important;
+    }
+
+    .title___2X-91 {
+      font-size: 18px !important;
+      font-weight: 700 !important;
+      color: #111827 !important;
+      text-align: center !important;
+      padding: 28px 28px 0 !important;
+    }
+
+    .content___1ErHC {
+      font-size: 14px !important;
+      color: #6b7280 !important;
+      text-align: center !important;
+      line-height: 1.7 !important;
+      padding: 12px 28px 0 !important;
+    }
+
+    .btnBox___kDZii {
+      display: flex !important;
+      justify-content: center !important;
+      gap: 12px !important;
+      padding: 24px 28px 28px !important;
+    }
+
+    .btn___1qaXZ {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      height: 38px !important;
+      min-width: 90px !important;
+      padding: 0 24px !important;
+      border-radius: 8px !important;
+      font-size: 14px !important;
+      font-weight: 500 !important;
+      cursor: pointer !important;
+      white-space: nowrap !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .cancel___24Ejk {
+      background: #fff !important;
+      border: 1.5px solid #d1d5db !important;
+      color: #374151 !important;
+    }
+
+    .cancel___24Ejk:hover {
+      border-color: #f97316 !important;
+      color: #f97316 !important;
+    }
+
+    .confirm___1EApH {
+      background: linear-gradient(135deg, #f97316, #ea580c) !important;
+      border: none !important;
+      color: #fff !important;
+      font-weight: 600 !important;
+      box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4) !important;
+    }
+
+    .confirm___1EApH:hover {
+      background: linear-gradient(135deg, #ea580c, #c2410c) !important;
+      box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5) !important;
+      transform: translateY(-1px) !important;
+    }
+  </style>
+  <link rel="stylesheet" href="/umi.a81b15ee.css" />
+  <script>
+    window.routerBase = "/";
+  </script>
+  <script>
+    //! umi version: 3.5.41
+  </script>
+</head>
+
+<body>
+
+  <div id="root"></div>
+
+  <script src="/umi.ffcb3e70.js"></script>
+  <script>
+    // LOCAL BYPASS: Force dismiss loading spinner after app initializes
+    (function () {
+      var MAX_WAIT = 15000;
+      var start = Date.now();
+      var dispatched = false;
+
+      // Override fetch to intercept API calls and return mock data
+      var _fetch = window.fetch;
+      window.fetch = function (url, opts) {
+        var urlStr = (typeof url === 'string' ? url : url.href || url.url || '');
+        // Intercept nobook API calls
+        if (urlStr.includes('nobook.com') || urlStr.includes('storage-backend') || urlStr.includes('passport.nobook')) {
+          var mockResp = { code: 200, data: { isLogin: true, userId: 'local', nickName: 'Local User', isVip: true, token: 'local_token', vipEndTime: '2099-12-31', subjectId: 2, lang: 'vi', content: '', name: 'Untitled', id: 'local_001' }, msg: 'success' };
+          return Promise.resolve(new Response(JSON.stringify(mockResp), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+        }
+        return _fetch.apply(this, arguments);
+      };
+
+      // Also intercept XMLHttpRequest
+      var _open = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function (method, url) {
+        var urlStr = url || '';
+        if (typeof urlStr === 'string' && (urlStr.includes('nobook.com') && !urlStr.includes('localhost'))) {
+          this._isIntercepted = true;
+          this._interceptUrl = urlStr;
+        }
+        return _open.apply(this, arguments);
+      };
+      var _send = XMLHttpRequest.prototype.send;
+      XMLHttpRequest.prototype.send = function (body) {
+        if (this._isIntercepted) {
+          var xhr = this;
+          setTimeout(function () {
+            var mockData = JSON.stringify({ code: 200, data: { isLogin: true, userId: 'local', nickName: 'Local User', isVip: true, token: 'local_token', vipEndTime: '2099-12-31', subjectId: 2, lang: 'vi', content: '', name: 'Untitled', id: 'local_001' }, msg: 'success' });
+            Object.defineProperty(xhr, 'readyState', { get: function () { return 4; }, configurable: true });
+            Object.defineProperty(xhr, 'status', { get: function () { return 200; }, configurable: true });
+            Object.defineProperty(xhr, 'responseText', { get: function () { return mockData; }, configurable: true });
+            Object.defineProperty(xhr, 'response', { get: function () { return mockData; }, configurable: true });
+            xhr.dispatchEvent(new Event('load'));
+            if (xhr.onload) xhr.onload();
+            if (xhr.onreadystatechange) xhr.onreadystatechange();
+          }, 50);
+          return;
+        }
+        return _send.apply(this, arguments);
+      };
+
+      // Poll for Redux store and force-hide loading spinner
+      function tryDismissSpinner() {
+        if (dispatched) return;
+        if (Date.now() - start > MAX_WAIT) return;
+
+        // Try to find the Redux store via React DevTools or window
+        try {
+          // Try finding redux dispatch via React root
+          var rootEl = document.getElementById('root');
+          if (!rootEl) { setTimeout(tryDismissSpinner, 500); return; }
+
+          // Look for redux store in window
+          var store = window.__reduxStore || window.store;
+          if (store && store.dispatch) {
+            store.dispatch({ type: 'spinModel/show', payload: false });
+            store.dispatch({ type: 'chemModel/setLoading', payload: false });
+            dispatched = true;
+            return;
+          }
+
+          // Alternative: find React fiber and dispatch via context
+          var fiber = rootEl._reactFiber || rootEl.__reactFiber || rootEl.__reactInternals;
+          if (!fiber) {
+            // Try finding via key
+            var key = Object.keys(rootEl).find(k => k.startsWith('__reactFiber') || k.startsWith('__reactInternalInstance'));
+            if (key) fiber = rootEl[key];
+          }
+
+          if (fiber) {
+            // Traverse fiber tree to find dispatch
+            var node = fiber;
+            var maxDepth = 200;
+            var depth = 0;
+            while (node && depth < maxDepth) {
+              depth++;
+              if (node.memoizedState) {
+                var s = node.memoizedState;
+                while (s) {
+                  if (s.queue && s.queue.dispatch) {
+                    // Found a dispatch! Not specific but try anyway
+                  }
+                  s = s.next;
+                }
+              }
+              if (node.memoizedProps && node.memoizedProps.store && node.memoizedProps.store.dispatch) {
+                var d = node.memoizedProps.store.dispatch;
+                d({ type: 'spinModel/show', payload: false });
+                d({ type: 'spinModel/updateState', payload: { show: false } });
+                dispatched = true;
+                return;
+              }
+              node = node.child || node.sibling || (node.return && node.return.sibling);
+            }
+          }
+        } catch (e) {
+        }
+
+        setTimeout(tryDismissSpinner, 800);
+      }
+
+      // Start trying after a short delay
+      setTimeout(tryDismissSpinner, 3000);
+
+      // === LOCAL FIX: Hide specific header buttons (Back, Save, Teaching demo) ===
+      (function () {
+        function hideHeaderButtons() {
+          // Hide "Teaching demo" button
+          document.querySelectorAll('button, span').forEach(function (el) {
+            var txt = (el.innerText || el.textContent || '').trim();
+            if (txt === 'Teaching demo' || txt === 'Teaching Demo') {
+              var btn = el.closest('button') || el;
+              btn.style.cssText = 'display:none!important';
+            }
+          });
+          // Hide "Save" button in header toolbar
+          document.querySelectorAll('[class*="chem"] button, [class*="header"] button, [class*="toolbar"] button, [class*="Header"] button').forEach(function (btn) {
+            var txt = (btn.innerText || '').trim();
+            if (txt === 'Save') btn.style.cssText = 'display:none!important';
+          });
+          // Hide back arrow (first button in header that is an icon-only SVG button)
+          var headers = document.querySelectorAll('[class*="chem-header"], [class*="chemHeader"], [class*="header_header"], [class*="editHeader"]');
+          headers.forEach(function (header) {
+            var btns = header.querySelectorAll('button');
+            btns.forEach(function (btn) {
+              var txt = (btn.innerText || '').trim();
+              if (txt === '' && btn.querySelector('svg')) {
+                btn.style.cssText = 'display:none!important';
+              }
+            });
+          });
+        }
+        setTimeout(hideHeaderButtons, 1000);
+        setTimeout(hideHeaderButtons, 2500);
+        setTimeout(hideHeaderButtons, 5000);
+        new MutationObserver(hideHeaderButtons).observe(document.documentElement, { childList: true, subtree: true });
+      })();
+
+      // === LOCAL FIX: Unlock all equipment (remove VIP lock overlays) ===
+      (function () {
+        function unlockEquipment() {
+          // Remove lock icon DOM nodes entirely
+          document.querySelectorAll('[data-testid="lock-icon"], .lockWrap___18q_Z, .lock___2rDz_').forEach(function (el) {
+            el.style.cssText = 'display:none!important';
+            // Also make the parent item fully interactive
+            var parent = el.closest('[class*="item"]') || el.closest('[class*="Item"]') || el.parentElement;
+            if (parent) {
+              parent.style.pointerEvents = 'auto';
+              parent.style.opacity = '1';
+            }
+          });
+          // Remove any class that indicates "locked" state from equipment items
+          document.querySelectorAll('[class*="locked"], [class*="Locked"], [class*="disable"], [class*="Disable"]').forEach(function (el) {
+            if (el.querySelector('svg') || el.querySelector('[class*="icon"]')) {
+              el.style.pointerEvents = 'auto';
+              el.style.opacity = '1';
+            }
+          });
+        }
+        // Run periodically and watch DOM
+        setTimeout(unlockEquipment, 2000);
+        setTimeout(unlockEquipment, 4000);
+        setInterval(unlockEquipment, 3000);
+        new MutationObserver(unlockEquipment).observe(document.documentElement, { childList: true, subtree: true });
+      })();
+
+      // === LOCAL FIX: Lock document.title + favicon to custom brand ===
+      (function () {
+        var TITLE = 'THS - Phòng Thí Nghiệm Ảo';
+        var FAVICON = 'https://truonghocsoquocgia.vn/assets/logo/Logomark.svg';
+
+        // Force favicon via JS (bypasses browser cache on <link rel="icon">)
+        function setFavicon() {
+          // Remove all existing favicon links
+          document.querySelectorAll('link[rel*="icon"]').forEach(function (el) { el.remove(); });
+          // Create new one with cache-busting timestamp
+          var link = document.createElement('link');
+          link.rel = 'icon';
+          link.type = 'image/svg+xml';
+          link.href = FAVICON + '?v=' + Date.now();
+          document.head.appendChild(link);
+        }
+        setFavicon();
+
+        // Lock title
+        document.title = TITLE;
+        var titleEl = document.querySelector('title');
+        if (titleEl) {
+          new MutationObserver(function () {
+            if (document.title !== TITLE) document.title = TITLE;
+          }).observe(titleEl, { childList: true, characterData: true, subtree: true });
+        }
+        setInterval(function () {
+          if (document.title !== TITLE) document.title = TITLE;
+        }, 2000);
+      })();
+
+    })();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,588 @@
+.headerRight___378Cu .float___JpRuT {
+    float: left
+}
+
+.headerRight___378Cu .circuit___2dEM9,
+.headerRight___378Cu .dis___2T1E8,
+.headerRight___378Cu .equation___1VoyA,
+.headerRight___378Cu .preview___2fY5V,
+.headerRight___378Cu .setting___1LCGN,
+.headerRight___378Cu .share___MctZ1,
+.headerRight___378Cu .show___Qzz8S,
+.headerRight___378Cu .table___20m8L {
+    text-align: center;
+    color: #ccc;
+    line-height: 16px;
+    cursor: pointer
+}
+
+.headerRight___378Cu .circuit___2dEM9 .icon___1nNK_,
+.headerRight___378Cu .dis___2T1E8 .icon___1nNK_,
+.headerRight___378Cu .equation___1VoyA .icon___1nNK_,
+.headerRight___378Cu .preview___2fY5V .icon___1nNK_,
+.headerRight___378Cu .setting___1LCGN .icon___1nNK_,
+.headerRight___378Cu .share___MctZ1 .icon___1nNK_,
+.headerRight___378Cu .show___Qzz8S .icon___1nNK_,
+.headerRight___378Cu .table___20m8L .icon___1nNK_ {
+    margin: 0 auto 5px
+}
+
+@media screen and (max-width:800px) {
+    .headerRight___378Cu .circuit___2dEM9,
+    .headerRight___378Cu .dis___2T1E8,
+    .headerRight___378Cu .equation___1VoyA,
+    .headerRight___378Cu .preview___2fY5V,
+    .headerRight___378Cu .setting___1LCGN,
+    .headerRight___378Cu .share___MctZ1,
+    .headerRight___378Cu .show___Qzz8S,
+    .headerRight___378Cu .table___20m8L {
+        margin: 0
+    }
+}
+
+.bottom_icon_pen_default___2YY37 {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: 0 0;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.bottom_icon_pen_hover___2QtxF {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -39px 0;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.bottom_icon_pen_pressed___3TgvF {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: 0 -39px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.header-back-hover___1oyvT {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -156px 0;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.header-back___2NZRf {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -156px -25px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.header-clone-hover___3W_1m {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -156px -50px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.header-clone___32O1A {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -156px -75px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.header-edit-default___h_n0g {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -156px -100px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.header-edit-hover___6apN0 {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -156px -125px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.header-oshare-default___1-4Xe {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: 0 -156px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.header-oshare-hover___3F0Vb {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -25px -156px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.header-preview-default___2qhv8 {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -50px -156px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.header-preview-hover___37waV {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -75px -156px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.header-pub-default___28dU8 {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -100px -156px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.header-pub-hover___17j8K {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -125px -156px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.icon_help_default___2x12u {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -39px -39px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.icon_help_hover___1PIbe {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -78px 0;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.icon_help_pressed___1RqUB {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -78px -39px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.icon_jianjie_def___1KZK2 {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: 0 -78px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.icon_jianjie_hov___33G0H {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -39px -78px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.icon_jianjie_pre___2a1Nh {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -78px -78px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.icon_shipin_def___23zBO {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -117px 0;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.icon_shipin_hov___3hSZ8 {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -117px -39px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.icon_shipin_pre___1iuNe {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -117px -78px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.menu_icon_gengduo_def___3GRrA {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -150px -156px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.menu_icon_gengduo_hov___23xy_ {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -181px 0;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.menu_icon_stopluzhi_def___2_zC5 {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -181px -25px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.menu_icon_stopluzhi_hov___2Nuhs {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -181px -50px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.shiyanxianshi___3PE-T {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -206px 0;
+    width: 18px;
+    height: 18px;
+    background-size: 224px 201px
+}
+
+.tongyongxianshi___2SqSF {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -206px -23px;
+    width: 18px;
+    height: 18px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_back_default___qid3S {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -206px -46px;
+    width: 11px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_back_hover___1Wj_U {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -206px -71px;
+    width: 11px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_del_default___3Pk8X {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -181px -75px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_del_hover___36p72 {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -181px -100px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_fangchengshi_default___1nYo8 {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -181px -125px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_fangchengshi_hover___JQqKj {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -181px -150px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_jietu_default___3O629 {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: 0 -117px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_jietu_hover___6RQZn {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -39px -117px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_reset_default___2n2qf {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: 0 -181px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_reset_hover___1q7-M {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -25px -181px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_save_default___3lnNR {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -50px -181px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_save_hover___2AXJc {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -75px -181px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_setting_default___1hOSr {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -100px -181px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_setting_hover___3EAls {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -125px -181px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_yanshi_default___2Hx7e {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -78px -117px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_yanshi_hover___3wu8J {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -117px -117px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_zuzhuang_default___2RU_B {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -150px -181px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.toolbar_icon_zuzhuang_hover___1JgbR {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -175px -181px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.headerRight___378Cu {
+    display: flex;
+    align-items: center
+}
+
+.headerRight___378Cu .HeaderRightWrap___1ysnp {
+    display: inline-flex
+}
+
+.headerRight___378Cu .chemSettingBox___2BoVc {
+    position: relative
+}
+
+.headerRight___378Cu .equation___1VoyA {
+    margin-left: 4px
+}
+
+.headerRight___378Cu .equation___1VoyA .icon___1nNK_ {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -181px -125px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.headerRight___378Cu .equationActive___2VBal .equation___1VoyA,
+.headerRight___378Cu .equationHover___SxeTs .equation___1VoyA {
+    color: var(--che-hover)
+}
+
+.headerRight___378Cu .equationActive___2VBal .equation___1VoyA .icon___1nNK_,
+.headerRight___378Cu .equationHover___SxeTs .equation___1VoyA .icon___1nNK_ {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -181px -150px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.headerRight___378Cu .preview___2fY5V .icon___1nNK_ {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -78px -117px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.headerRight___378Cu .previewActive___2It-2 .preview___2fY5V,
+.headerRight___378Cu .previewHover___3M-sW .preview___2fY5V {
+    color: var(--che-hover)
+}
+
+.headerRight___378Cu .previewActive___2It-2 .preview___2fY5V .icon___1nNK_,
+.headerRight___378Cu .previewHover___3M-sW .preview___2fY5V .icon___1nNK_ {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -117px -117px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.headerRight___378Cu .record___sFEfE {
+    margin-left: 5px
+}
+
+.headerRight___378Cu .setting___1LCGN {
+    position: relative;
+    margin-left: 4px
+}
+
+.headerRight___378Cu .setting___1LCGN .icon___1nNK_ {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -100px -181px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.headerRight___378Cu .setting___1LCGN .role___ylnIN {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 0;
+    width: 0;
+    overflow: hidden;
+    border: 8px solid transparent;
+    transition: border-color .5s ease
+}
+
+.headerRight___378Cu .setting___1LCGN .roleTop___2EI2V {
+    bottom: -15px;
+    display: block;
+    border-color: transparent transparent rgba(22, 23, 24, .95)
+}
+
+.headerRight___378Cu .setting___1LCGN .roleBottom___3DX59 {
+    border-color: rgba(22, 23, 24, .95) transparent transparent;
+    top: -15px;
+    display: block
+}
+
+.headerRight___378Cu .settingActive___36KFK .setting___1LCGN,
+.headerRight___378Cu .settingHover___2PZNQ .setting___1LCGN {
+    color: var(--che-hover)
+}
+
+.headerRight___378Cu .settingActive___36KFK .setting___1LCGN .icon___1nNK_,
+.headerRight___378Cu .settingHover___2PZNQ .setting___1LCGN .icon___1nNK_ {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -125px -181px;
+    width: 20px;
+    height: 20px;
+    background-size: 224px 201px
+}
+
+.headerRight___378Cu .share___MctZ1 {
+    color: #ccc
+}
+
+.headerRight___378Cu .share___MctZ1 .icon___1nNK_ {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: 0 -117px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.headerRight___378Cu .shareActive___Hiiu8 .share___MctZ1,
+.headerRight___378Cu .shareHover___1mrE6 .share___MctZ1 {
+    color: var(--che-hover)
+}
+
+.headerRight___378Cu .shareActive___Hiiu8 .share___MctZ1 .icon___1nNK_,
+.headerRight___378Cu .shareHover___1mrE6 .share___MctZ1 .icon___1nNK_ {
+    background-image: url(static/chem_editHeader_sprite.6a5b835c.png);
+    background-position: -39px -117px;
+    width: 34px;
+    height: 34px;
+    background-size: 224px 201px
+}
+
+.settingPopover___2wJpo .settingScroll {
+    height: auto !important
+}
+
+.settingPopover___2wJpo .ant-popover-arrow {
+    display: none;
+    transform: translateX(0);
+    left: auto
+}
+
+.settingPopover___2wJpo .ant-popover-arrow span {
+    background-color: rgba(22, 23, 24, .95)
+}
+
+.settingPopover___2wJpo .ant-popover-inner {
+    background-color: transparent
+}
+
+.settingPopover___2wJpo .ant-popover-inner-content {
+    padding: 0
+}

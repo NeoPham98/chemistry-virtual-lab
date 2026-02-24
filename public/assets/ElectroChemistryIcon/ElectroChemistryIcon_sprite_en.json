@@ -1,0 +1,418 @@
+﻿{
+  "frames": {
+    "ADropper.png instance 1": {
+      "frame": { "x": 334, "y": 166, "w": 81, "h": 80 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 80 },
+      "sourceSize": { "w": 81, "h": 80 }
+    },
+    "AcidBrownDropper.png instance 1": {
+      "frame": { "x": 334, "y": 745, "w": 80, "h": 80 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 80, "h": 80 },
+      "sourceSize": { "w": 80, "h": 80 }
+    },
+    "AcidDropper.png instance 1": {
+      "frame": { "x": 334, "y": 248, "w": 81, "h": 80 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 80 },
+      "sourceSize": { "w": 81, "h": 80 }
+    },
+    "AlcoholBurner.png instance 1": {
+      "frame": { "x": 2, "y": 85, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "AnionExchangeMembrane.png instance 1": {
+      "frame": { "x": 334, "y": 84, "w": 81, "h": 80 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 80 },
+      "sourceSize": { "w": 81, "h": 80 }
+    },
+    "Apple.png instance 1": {
+      "frame": { "x": 334, "y": 2, "w": 81, "h": 80 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 80 },
+      "sourceSize": { "w": 81, "h": 80 }
+    },
+    "Battery.png instance 1": {
+      "frame": { "x": 251, "y": 910, "w": 81, "h": 80 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 80 },
+      "sourceSize": { "w": 81, "h": 80 }
+    },
+    "BigTestTube.png instance 1": {
+      "frame": { "x": 251, "y": 828, "w": 81, "h": 80 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 80 },
+      "sourceSize": { "w": 81, "h": 80 }
+    },
+    "Bulb.png instance 1": {
+      "frame": { "x": 251, "y": 746, "w": 81, "h": 80 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 80 },
+      "sourceSize": { "w": 81, "h": 80 }
+    },
+    "Catheter90.png instance 1": {
+      "frame": { "x": 251, "y": 664, "w": 81, "h": 80 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 80 },
+      "sourceSize": { "w": 81, "h": 80 }
+    },
+    "CationExchangeMembrane.png instance 1": {
+      "frame": { "x": 251, "y": 582, "w": 81, "h": 80 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 80 },
+      "sourceSize": { "w": 81, "h": 80 }
+    },
+    "CellCover.png instance 1": {
+      "frame": { "x": 334, "y": 662, "w": 80, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 80, "h": 81 },
+      "sourceSize": { "w": 80, "h": 81 }
+    },
+    "DropperBottle.png instance 1": {
+      "frame": { "x": 251, "y": 417, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "DropperBottleBrown.png instance 1": {
+      "frame": { "x": 251, "y": 334, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "ElectrodeAg.png instance 1": {
+      "frame": { "x": 251, "y": 251, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "ElectrodeAl.png instance 1": {
+      "frame": { "x": 251, "y": 168, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "ElectrodeC.png instance 1": {
+      "frame": { "x": 251, "y": 85, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "ElectrodeCrudeCu.png instance 1": {
+      "frame": { "x": 251, "y": 2, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "ElectrodeCu.png instance 1": {
+      "frame": { "x": 168, "y": 915, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "ElectrodeFe.png instance 1": {
+      "frame": { "x": 168, "y": 832, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "ElectrodeMg.png instance 1": {
+      "frame": { "x": 168, "y": 749, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "ElectrodePb.png instance 1": {
+      "frame": { "x": 334, "y": 579, "w": 80, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 80, "h": 81 },
+      "sourceSize": { "w": 80, "h": 81 }
+    },
+    "ElectrodePbO2.png instance 1": {
+      "frame": { "x": 168, "y": 666, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "ElectrodePt.png instance 1": {
+      "frame": { "x": 168, "y": 583, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "ElectrodeZn.png instance 1": {
+      "frame": { "x": 168, "y": 500, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "FilterPaper.png instance 1": {
+      "frame": { "x": 168, "y": 417, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "FlexibleGlassCatheter.png instance 1": {
+      "frame": { "x": 251, "y": 500, "w": 81, "h": 80 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 80 },
+      "sourceSize": { "w": 81, "h": 80 }
+    },
+    "Forceps.png instance 1": {
+      "frame": { "x": 2, "y": 168, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "FourCellElectrolyzer.png instance 1": {
+      "frame": { "x": 168, "y": 334, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "FrostedLiquidBottle.png instance 1": {
+      "frame": { "x": 168, "y": 251, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "Galvanometer.png instance 1": {
+      "frame": { "x": 168, "y": 168, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "GasBag.png instance 1": {
+      "frame": { "x": 168, "y": 85, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "GasCollectingBottle.png instance 1": {
+      "frame": { "x": 168, "y": 2, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "GlassBar.png instance 1": {
+      "frame": { "x": 2, "y": 251, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "GlassSheet.png instance 1": {
+      "frame": { "x": 334, "y": 496, "w": 80, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 80, "h": 81 },
+      "sourceSize": { "w": 80, "h": 81 }
+    },
+    "HugeBeaker.png instance 1": {
+      "frame": { "x": 85, "y": 915, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "IonExchangeMembrane.png instance 1": {
+      "frame": { "x": 2, "y": 417, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "Led.png instance 1": {
+      "frame": { "x": 85, "y": 832, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "LiquidBottle.png instance 1": {
+      "frame": { "x": 85, "y": 749, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "LongADropper.png instance 1": {
+      "frame": { "x": 2, "y": 334, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "Match.png instance 1": {
+      "frame": { "x": 2, "y": 2, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "Motor.png instance 1": {
+      "frame": { "x": 85, "y": 666, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "NarrowGlassPlug.png instance 1": {
+      "frame": { "x": 85, "y": 583, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "NarrowMouthBottle.png instance 1": {
+      "frame": { "x": 85, "y": 500, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "RubberCatheter.png instance 1": {
+      "frame": { "x": 85, "y": 417, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "RubberPlug.png instance 1": {
+      "frame": { "x": 85, "y": 334, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "SaltBridge.png instance 1": {
+      "frame": { "x": 85, "y": 251, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "SingleSwitch.png instance 1": {
+      "frame": { "x": 334, "y": 413, "w": 80, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 80, "h": 81 },
+      "sourceSize": { "w": 80, "h": 81 }
+    },
+    "StraightGlassCatheter.png instance 1": {
+      "frame": { "x": 85, "y": 168, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "TestPaperBookBlue.png instance 1": {
+      "frame": { "x": 85, "y": 85, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "TestPaperBookKI.png instance 1": {
+      "frame": { "x": 85, "y": 2, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "TestPaperBookPH.png instance 1": {
+      "frame": { "x": 2, "y": 915, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "TestPaperBookPt.png instance 1": {
+      "frame": { "x": 2, "y": 832, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "TestPaperBookRed.png instance 1": {
+      "frame": { "x": 2, "y": 749, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "ThreeCellElectrolyzer.png instance 1": {
+      "frame": { "x": 2, "y": 666, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "TwoCellElectrolyzer.png instance 1": {
+      "frame": { "x": 2, "y": 583, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "WireBlack.png instance 1": {
+      "frame": { "x": 2, "y": 500, "w": 81, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 81, "h": 81 },
+      "sourceSize": { "w": 81, "h": 81 }
+    },
+    "WireRed.png instance 1": {
+      "frame": { "x": 334, "y": 330, "w": 80, "h": 81 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 80, "h": 81 },
+      "sourceSize": { "w": 80, "h": 81 }
+    }
+  },
+  "meta": {
+    "app": "Adobe Animate",
+    "version": "24.0.0.305",
+    "image": "ElectroChemistryIcon_sprite_en.png",
+    "format": "RGBA8888",
+    "size": { "w": 512, "h": 1024 },
+    "scale": "1"
+  }
+}

@@ -1,0 +1,48 @@
+.compCon___R-w39 {
+    z-index: 1100;
+    position: relative
+}
+
+.videoBox___34G7Y {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background-color: rgba(0, 0, 0, .25);
+    z-index: 1
+}
+
+.videoBox___34G7Y .miniProgramVideo___1qWS1 {
+    position: absolute;
+    width: 100% !important;
+    height: 100% !important
+}
+
+.videoBox___34G7Y .videoCloseBtn___2UsfJ {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    right: 44px;
+    top: 44px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    background: hsla(0, 0%, 53.3%, .8);
+    z-index: 200
+}
+
+.videoBox___34G7Y .videoCloseBtn___2UsfJ svg {
+    width: 20px;
+    height: 20px
+}
+
+.videoBox___34G7Y .videoCloseBtn___2UsfJ svg path {
+    fill: hsla(0, 0%, 100%, .9)
+}
+
+.videoBox___34G7Y .videoBg___28A8j {
+    width: 100%;
+    height: 100%
+}

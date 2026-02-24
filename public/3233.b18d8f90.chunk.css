@@ -1,0 +1,358 @@
+.equipmentDrawer___1hxCX {
+    overflow: visible
+}
+
+.equipmentDrawer___1hxCX .rt___wvmzB {
+    position: absolute;
+    right: calc(100% + 25px);
+    top: 25px
+}
+
+.equipmentDrawer___1hxCX .logo___1Wq89 {
+    position: absolute;
+    right: calc(100% + 25px);
+    bottom: 10px;
+    color: hsla(0, 0%, 100%, .1);
+    font-size: 22px;
+    font-weight: 700;
+    pointer-events: none
+}
+
+.equipmentDrawer___1hxCX .ant-drawer-content {
+    overflow: visible
+}
+
+.equipmentDrawer___1hxCX .ant-drawer-wrapper-body {
+    background: rgba(40, 44, 50, .95)
+}
+
+.equipmentDrawer___1hxCX .ant-drawer-body {
+    padding: 0;
+    overflow: visible
+}
+
+.ant-drawer {
+    z-index: 100
+}
+
+.ant-drawer-content-wrapper {
+    box-shadow: none !important
+}
+
+.equipment_icon_aid_click___2FIGp {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -147px 0;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_aid_default___2yhVs {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -147px -45px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_aid_hover___2l3qv {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: 0 -121px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_electro_electrode_click___1O8Y2 {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -45px -121px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_electro_electrode_default___1cVb- {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -90px -121px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_electro_eq_click___3mbdp {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -135px -121px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_electro_eq_default___2dBVD {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -192px 0;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_electro_gas_click___2neGl {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -192px -45px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_electro_gas_default___1UnfD {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -192px -90px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_electro_liquid_click___27A_p {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: 0 -166px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_electro_liquid_default___BjNN7 {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -45px -166px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_gas_click___36kM4 {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -90px -166px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_gas_default___1LzlB {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -135px -166px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_gas_hover___1pnRY {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -180px -166px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_liquid_click___3haXe {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -237px 0;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_liquid_default___dBQZQ {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -237px -45px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_liquid_hover___2ujuA {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -237px -90px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_open_default___1ao41 {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -298px -39px;
+    width: 10.5px;
+    height: 68.5px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_put-away_default___1EK73 {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -282px -39px;
+    width: 11px;
+    height: 68.5px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_reactor_click___2gX1_ {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -237px -135px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_reactor_default___FFUSd {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: 0 -211px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_reactor_hover___1Ti0j {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -45px -211px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_solid_click___18BWd {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -90px -211px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_solid_default___9Mqd3 {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -135px -211px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.equipment_icon_solid_hover___3IGzJ {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -180px -211px;
+    width: 40px;
+    height: 40px;
+    background-size: 316px 258px
+}
+
+.icon_keyboard_def___3s_AV {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -225px -211px;
+    width: 34px;
+    height: 34px;
+    background-size: 316px 258px
+}
+
+.icon_keyboard_hov___2LIOj {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -282px 0;
+    width: 34px;
+    height: 34px;
+    background-size: 316px 258px
+}
+
+.lock___2FNbi {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -282px -112.5px;
+    width: 24px;
+    height: 24px;
+    background-size: 316px 258px
+}
+
+.qicaiku_button_back_default___391hA {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -60px 0;
+    width: 24px;
+    height: 116px;
+    background-size: 316px 258px
+}
+
+.qicaiku_button_back_pressed___29RXO {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -89px 0;
+    width: 24px;
+    height: 116px;
+    background-size: 316px 258px
+}
+
+.qicaiku_button_default___3gv9z {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: 0 0;
+    width: 25px;
+    height: 116px;
+    background-size: 316px 258px
+}
+
+.qicaiku_button_hover___1nQTN {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -30px 0;
+    width: 25px;
+    height: 116px;
+    background-size: 316px 258px
+}
+
+.qicaiku_button_pressed___1_1mT {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -118px 0;
+    width: 24px;
+    height: 116px;
+    background-size: 316px 258px
+}
+
+.search_icon_line_default___Eoe0X {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: 0 -256px;
+    width: 60px;
+    height: 2px;
+    background-size: 316px 258px
+}
+
+.search_icon_search_Hover___11G0O {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -282px -141.5px;
+    width: 24px;
+    height: 24px;
+    background-size: 316px 258px
+}
+
+.search_icon_search_default___1cBYc {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -282px -170.5px;
+    width: 24px;
+    height: 24px;
+    background-size: 316px 258px
+}
+
+.tanchuang_close___1rJju copy {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -282px -199.5px;
+    width: 16px;
+    height: 16px;
+    background-size: 316px 258px
+}
+
+.tanchuang_close___1rJju {
+    background-image: url(static/equipmentDrawer_sprite.37985266.png);
+    background-position: -282px -220.5px;
+    width: 16px;
+    height: 16px;
+    background-size: 316px 258px
+}
+
+.toggleTar___2w2k_ {
+    position: absolute;
+    top: 50%;
+    left: -25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    width: 25px;
+    height: 116px;
+    transform: translateY(-50%);
+    cursor: pointer
+}

@@ -5,6 +5,11 @@
   <base href="/" />
 
   <meta charset="UTF-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <!-- <meta name="description" content="false" />
     <meta
@@ -123,6 +128,14 @@
   <!-- <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script> -->
   <link rel="shortcut icon" type="image/x-icon" href="chem.ico" />
   <style>
+    /* ===== FONT OVERRIDE: Apply Inter everywhere ===== */
+    * {
+      font-family: 'Inter', 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+      -webkit-font-smoothing: antialiased !important;
+      -moz-osx-font-smoothing: grayscale !important;
+      text-rendering: optimizeLegibility !important;
+    }
+
     /* LOCAL FIX: Hide back, save, teaching demo buttons */
     .goback___3-rSP,
     .save___j3q2q,
@@ -144,9 +157,8 @@
       backdrop-filter: blur(3px) !important;
     }
 
-    /* Modal box */
-    .ant-modal-confirm .ant-modal-content,
-    .ant-modal-content {
+    /* Modal box — CHỈ áp cho confirm dialog, KHÔNG override settings popup */
+    .ant-modal-confirm .ant-modal-content {
       border-radius: 16px !important;
       box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22) !important;
       padding: 0 !important;
@@ -170,7 +182,8 @@
       color: #1a1a2e !important;
       text-align: center !important;
       margin-bottom: 10px !important;
-      letter-spacing: 0.3px !important;
+      letter-spacing: -0.3px !important;
+      font-family: 'Inter', 'Be Vietnam Pro', sans-serif !important;
     }
 
     /* Content text */
@@ -178,8 +191,10 @@
       font-size: 14px !important;
       color: #6b7280 !important;
       text-align: center !important;
-      line-height: 1.65 !important;
+      line-height: 1.7 !important;
       margin-top: 8px !important;
+      font-family: 'Inter', 'Be Vietnam Pro', sans-serif !important;
+      letter-spacing: 0.01em !important;
     }
 
     /* Buttons row */
@@ -308,6 +323,161 @@
       background: linear-gradient(135deg, #ea580c, #c2410c) !important;
       box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5) !important;
       transform: translateY(-1px) !important;
+    }
+
+    /* ===== LOCAL FIX: Header layout — THS Logo left, Real buttons right ===== */
+    /* Move headerLeft to RIGHT side — elements keep real layout so Popover positions correctly */
+    .headerLeft___3QkjE {
+      position: absolute !important;
+      right: 0 !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      left: auto !important;
+      display: flex !important;
+      align-items: center !important;
+      padding: 0 16px !important;
+      gap: 8px !important;
+      background: transparent !important;
+    }
+
+    /* Hide center/preview */
+    .headerCenter___3ybzU,
+    .lastComp___2CPhU {
+      display: none !important;
+    }
+
+    /* Hide unwanted items inside headerLeft */
+    .goback___3-rSP,
+    .save___j3q2q {
+      display: none !important;
+    }
+
+    /* headerLeftWrap — clear button container */
+    .headerLeftWrap___3xzV1 {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+    }
+
+    /* headerRight — settings button container */
+    .headerRight___378Cu,
+    .HeaderRightWrap___1ysnp {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+    }
+
+    /* ===== Style real "Xóa sạch" button ===== */
+    .clear___1iGxv {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      height: 32px !important;
+      padding: 0 13px !important;
+      border-radius: 7px !important;
+      background: rgba(239, 68, 68, 0.08) !important;
+      border: 1.5px solid rgba(239, 68, 68, 0.38) !important;
+      color: #fca5a5 !important;
+      font-size: 12.5px !important;
+      font-weight: 500 !important;
+      cursor: pointer !important;
+      transition: all 0.18s ease !important;
+      font-family: 'Inter', 'Be Vietnam Pro', sans-serif !important;
+      white-space: nowrap !important;
+      letter-spacing: 0.01em !important;
+    }
+
+    .clear___1iGxv:hover {
+      background: rgba(239, 68, 68, 0.18) !important;
+      border-color: #ef4444 !important;
+      color: #fff !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.22) !important;
+    }
+
+    /* Icon thùng rác — đổi màu sang đỏ nhạt khớp text */
+    .clear___1iGxv>div:first-child {
+      filter: brightness(0) saturate(100%) invert(74%) sepia(30%) saturate(700%) hue-rotate(314deg) brightness(105%) contrast(96%) !important;
+      transition: filter 0.18s ease !important;
+    }
+
+    .clear___1iGxv:hover>div:first-child {
+      filter: brightness(0) invert(1) !important;
+    }
+
+    /* ===== Style real "Cài đặt" button ===== */
+    .setting___1LCGN {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      height: 32px !important;
+      padding: 0 13px !important;
+      border-radius: 7px !important;
+      background: rgba(255, 255, 255, 0.08) !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.18) !important;
+      color: rgba(255, 255, 255, 0.88) !important;
+      font-size: 12.5px !important;
+      font-weight: 500 !important;
+      cursor: pointer !important;
+      transition: all 0.18s ease !important;
+      font-family: 'Inter', 'Be Vietnam Pro', sans-serif !important;
+      white-space: nowrap !important;
+      letter-spacing: 0.01em !important;
+    }
+
+    .setting___1LCGN:hover {
+      background: rgba(255, 255, 255, 0.16) !important;
+      border-color: rgba(255, 255, 255, 0.42) !important;
+      color: #fff !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16) !important;
+    }
+
+    /* Hide the icon sprite, keep text label */
+    .setting___1LCGN .icon___1nNK_ {
+      display: none !important;
+    }
+
+    /* THS Logo — injected via JS, pinned left */
+    #ths-logo-inject {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 200;
+      cursor: default;
+      text-decoration: none !important;
+    }
+
+    #ths-logo-inject img {
+      height: 38px;
+      width: auto;
+      display: block;
+    }
+
+    #ths-logo-inject .ths-logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    #ths-logo-inject .ths-logo-text span:first-child {
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      color: #fff !important;
+      letter-spacing: 0.3px !important;
+      font-family: 'Inter', 'Be Vietnam Pro', sans-serif !important;
+    }
+
+    #ths-logo-inject .ths-logo-text span:last-child {
+      font-size: 10px !important;
+      font-weight: 500 !important;
+      color: rgba(255, 255, 255, 0.65) !important;
+      letter-spacing: 0.8px !important;
+      font-family: 'Inter', 'Be Vietnam Pro', sans-serif !important;
     }
   </style>
   <link rel="stylesheet" href="/umi.a81b15ee.css" />
@@ -495,6 +665,96 @@
         setTimeout(unlockEquipment, 4000);
         setInterval(unlockEquipment, 3000);
         new MutationObserver(unlockEquipment).observe(document.documentElement, { childList: true, subtree: true });
+      })();
+
+      // === LOCAL FIX: Inject THS Logo into header ===
+      (function () {
+        function getHeader() {
+          return document.getElementById('header_wrap') ||
+            document.querySelector('[class*="header___"]');
+        }
+
+        function injectTHSLogo() {
+          var header = getHeader();
+          if (!header || document.getElementById('ths-logo-inject')) return;
+          var logo = document.createElement('div');
+          logo.id = 'ths-logo-inject';
+          logo.innerHTML = [
+            '<img src="https://truonghocsoquocgia.vn/assets/logo/Logomark.svg"',
+            '     onerror="this.style.display=\'none\'"',
+            '     alt="THS Logo" />',
+            '<div class="ths-logo-text">',
+            '  <span>TRƯỜNG HỌC SỐ</span>',
+            '  <span>QUỐC GIA VIỆT NAM</span>',
+            '</div>'
+          ].join('');
+          header.appendChild(logo);
+        }
+
+        setTimeout(injectTHSLogo, 600);
+        setTimeout(injectTHSLogo, 2000);
+        setTimeout(injectTHSLogo, 4000);
+        new MutationObserver(function () {
+          if (!document.getElementById('ths-logo-inject')) injectTHSLogo();
+        }).observe(document.documentElement, { childList: true, subtree: true });
+      })();
+
+      // === LOCAL FIX: THS brand in loading screen ===
+      (function () {
+        var ID = 'ths-load-brand';
+        var overlay = null;
+
+        function inject() {
+          if (document.getElementById(ID)) return;
+          var root = document.getElementById('root');
+          if (!root || !root.firstElementChild) return;
+          overlay = root.firstElementChild;
+
+          // Move flask up
+          if (!overlay._up) {
+            overlay._up = true;
+            overlay.style.marginTop = '-40px';
+          }
+
+          var el = document.createElement('div');
+          el.id = ID;
+          el.style.cssText = 'position:fixed;top:72%;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none;text-align:center;z-index:2147483647';
+          el.innerHTML =
+            '<img src="https://truonghocsoquocgia.vn/assets/logo/Logomark.svg" onerror="this.style.display=\'none\'" alt="THS" style="height:44px;width:auto;" />' +
+            '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+            '<span style="font-size:13px;font-weight:700;color:#fff;letter-spacing:0.4px;font-family:Inter,sans-serif;">TRƯỜNG HỌC SỐ</span>' +
+            '<span style="font-size:9.5px;color:rgba(255,255,255,0.5);letter-spacing:1.2px;font-family:Inter,sans-serif;">PHÒNG THÍ NGHIỆM ẢO</span>' +
+            '</div>';
+          document.body.appendChild(el);
+        }
+
+        function remove() {
+          var el = document.getElementById(ID);
+          if (!el || el._done) return;
+          el._done = true;
+          el.style.transition = 'opacity 0.4s';
+          el.style.opacity = '0';
+          setTimeout(function () { el.parentNode && el.parentNode.removeChild(el); }, 450);
+        }
+
+        new MutationObserver(function (_, obs) {
+          inject();
+          // React re-renders overlay with new className when loading finishes
+          // OR detect that header is now visible (has height > 0)
+          var header = document.querySelector('[class*="header___"]');
+          var headerVisible = header && header.offsetHeight > 0;
+          var overlayChanged = overlay && overlay._initClass && overlay.className !== overlay._initClass;
+          if (overlayChanged || headerVisible) {
+            obs.disconnect();
+            setTimeout(remove, 4000);
+          }
+          // Save initial class on first inject
+          if (overlay && !overlay._initClass && overlay.className) {
+            overlay._initClass = overlay.className;
+          }
+        }).observe(document.getElementById('root') || document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+
+        setTimeout(remove, 4000);
       })();
 
       // === LOCAL FIX: Lock document.title + favicon to custom brand ===

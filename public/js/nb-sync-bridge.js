@@ -257,71 +257,44 @@
       // All other commands
       var result;
       try { result = _origExecute.apply(cm, args); } catch (e) { throw e; }
+      // Relay whitelisted commands (ADD/CREATE equipment) — keeps drag smooth
       if (_isPresenter && !_isSyncing && RELAY_COMMANDS[cmd] && cmd !== CMD_DELETE) {
         var cmdName = RELAY_COMMANDS[cmd];
         var cloned = safeClone(args);
         if (cloned) {
           sendToParent('EXECUTE_CMD', { cmdName: cmdName, args: cloned });
-        } else {
-          // Extract only own primitive/simple properties (Object.keys = no prototype freeze)
-          var extracted = [cmd];
-          for (var i = 1; i < args.length; i++) {
-            if (typeof args[i] === 'object' && args[i] !== null) {
-              var simple = {};
-              var keys = Object.keys(args[i]);
-              for (var j = 0; j < keys.length; j++) {
-                var v = args[i][keys[j]];
-                if (v === null || typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
-                  simple[keys[j]] = v;
-                } else if (Array.isArray(v)) {
-                  try { simple[keys[j]] = JSON.parse(JSON.stringify(v)); } catch(e2) {}
-                } else if (typeof v === 'object') {
-                  // One level deep for position/config objects
-                  try { simple[keys[j]] = JSON.parse(JSON.stringify(v)); } catch(e2) {}
-                }
-              }
-              extracted.push(simple);
-            } else {
-              extracted.push(args[i]);
-            }
-          }
-          sendToParent('EXECUTE_CMD', { cmdName: cmdName, args: extracted });
         }
         log('⚡', cmdName);
-        // After ADD_EQUIPMENT: deep scan to find where equipment lives
-        if (cmdName.indexOf('ADD') >= 0 || cmdName.indexOf('CREATE') >= 0) {
-          setTimeout(function () {
-            var cm = window.chemicalMain;
-            if (!cm) return;
-            log('🔎 Scanning for equipment...');
-            // Check all cm properties
-            var keys = Object.keys(cm);
-            for (var k = 0; k < keys.length; k++) {
-              var prop = cm[keys[k]];
-              if (!prop || typeof prop !== 'object') continue;
-              // PIXI containers with children
-              if (prop.children && prop.children.length > 0) {
-                log('🔎 cm.' + keys[k] + ': ch=' + prop.children.length + ' x=' + (typeof prop.x === 'number' ? Math.round(prop.x) : '?'));
-              }
-              // Arrays that might contain equipment
-              if (Array.isArray(prop) && prop.length > 0) {
-                log('🔎 cm.' + keys[k] + ': Array[' + prop.length + ']');
-              }
-              // Map-like objects
-              if (prop.size > 0) {
-                log('🔎 cm.' + keys[k] + ': size=' + prop.size);
-              }
-            }
-            // Check proto methods for equipment access
-            var proto = Object.getPrototypeOf(cm);
-            if (proto) {
-              var pkeys = Object.getOwnPropertyNames(proto).filter(function(n) { return n.toLowerCase().indexOf('equip') >= 0 || n.toLowerCase().indexOf('item') >= 0 || n.toLowerCase().indexOf('element') >= 0; });
-              if (pkeys.length > 0) log('🔎 Proto methods:', pkeys.join(', '));
-            }
-          }, 500);
-        }
-        // Send position sync after state change
         setTimeout(function () { sendPositionSync(); }, 100);
+      }
+      // Relay one-shot interaction commands (non-whitelisted, fire ≤3x in 2s)
+      if (_isPresenter && !_isSyncing && !RELAY_COMMANDS[cmd] && cmd !== CMD_DELETE) {
+        if (!window.__cmdFreq) window.__cmdFreq = {};
+        if (!window.__cmdSkip) window.__cmdSkip = {};
+        var now = Date.now();
+        if (!window.__cmdSkip[cmd]) {
+          if (!window.__cmdFreq[cmd]) window.__cmdFreq[cmd] = [];
+          window.__cmdFreq[cmd].push(now);
+          window.__cmdFreq[cmd] = window.__cmdFreq[cmd].filter(function(t) { return now - t < 2000; });
+          if (window.__cmdFreq[cmd].length > 3) {
+            window.__cmdSkip[cmd] = true;
+            log('⏭ Skip tick:', cmd.substr(0, 8) + '...');
+          } else {
+            // Smart serialize with PIXI path refs
+            var smartArgs = [cmd];
+            for (var i = 1; i < args.length; i++) {
+              var a = args[i];
+              if (a && typeof a === 'object' && typeof a.x === 'number' && a.parent) {
+                var eqPath = findChildPath(cm, a);
+                smartArgs.push(eqPath ? { __pixiRef: true, path: eqPath } : null);
+              } else {
+                try { smartArgs.push(JSON.parse(JSON.stringify(a))); } catch(e3) { smartArgs.push(null); }
+              }
+            }
+            sendToParent('EXECUTE_CMD', { cmdName: cmd, args: smartArgs });
+            log('⚡🔥', cmd.substr(0, 8) + '...');
+          }
+        }
       }
       return result;
     };
@@ -342,7 +315,39 @@
         if (child) { _origExecute.call(cm, CMD_DELETE, { eq: [child] }); log('✓ Deleted on viewer'); }
         else log('⚠ DELETE: child not found');
       } else if (payload.args) {
-        _origExecute.apply(cm, payload.args);
+        // Resolve __pixiRef paths back to local PIXI objects
+        var resolvedArgs = [];
+        for (var i = 0; i < payload.args.length; i++) {
+          var a = payload.args[i];
+          if (a && typeof a === 'object' && a.__pixiRef && a.path) {
+            var obj = getChildByPath(cm, a.path);
+            if (obj) {
+              resolvedArgs.push(obj);
+              log('📎 Resolved path:', JSON.stringify(a.path));
+            } else {
+              log('⚠ Could not resolve pixiRef:', JSON.stringify(a.path));
+              resolvedArgs.push(null);
+            }
+          } else if (a && typeof a === 'object' && a !== null) {
+            // Check for nested __pixiRef in object properties
+            var resolved = {};
+            var keys = Object.keys(a);
+            var hasRef = false;
+            for (var j = 0; j < keys.length; j++) {
+              var val = a[keys[j]];
+              if (val && typeof val === 'object' && val.__pixiRef && val.path) {
+                resolved[keys[j]] = getChildByPath(cm, val.path);
+                hasRef = true;
+              } else {
+                resolved[keys[j]] = val;
+              }
+            }
+            resolvedArgs.push(hasRef ? resolved : a);
+          } else {
+            resolvedArgs.push(a);
+          }
+        }
+        _origExecute.apply(cm, resolvedArgs);
       }
     } catch (e) { log('❌ Replay error:', e.message); }
     _isSyncing = false;
@@ -438,12 +443,6 @@
         var type = action.type, skip = false;
         for (var i = 0; i < SKIP_DVA.length; i++) { if (type.indexOf(SKIP_DVA[i]) === 0) { skip = true; break; } }
         if (!skip) {
-          // Log ALL unique action types to find drag/move actions
-          if (!window.__seenDva) window.__seenDva = {};
-          if (!window.__seenDva[type]) {
-            window.__seenDva[type] = true;
-            log('🔍 DVA:', type);
-          }
           var relay = false;
           for (var i = 0; i < RELAY_DVA.length; i++) { if (type.indexOf(RELAY_DVA[i]) >= 0) { relay = true; break; } }
           if (relay) {
@@ -566,11 +565,11 @@
           }));
         } catch (e) { log('❌ History send error:', e.message); }
       }
-      // Send fresh position sync after history (corrects any position drift)
+      // Send fresh position sync burst after history
       if (_isPresenter) {
-        setTimeout(function () {
-          sendPositionSync();
-        }, 300);
+        [300, 800, 1500, 3000].forEach(function(delay) {
+          setTimeout(function () { sendPositionSync(); }, delay);
+        });
       }
     });
     conn.on('data', function (data) {
@@ -636,12 +635,12 @@
       broadcastEvent(action, payload);
     };
     log('✓ Presenter mode — broadcasting enabled');
-    // Periodic position sync every 2s
+    // Periodic position sync every 1s
     setInterval(function () {
-      if (_isPresenter && _peerConns.length > 0) {
+      if (_isPresenter) {
         sendPositionSync();
       }
-    }, 2000);
+    }, 1000);
   }
 
   // Block all user interactions on viewer (student)

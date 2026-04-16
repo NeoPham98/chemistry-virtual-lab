@@ -317,37 +317,40 @@
       } else if (payload.args) {
         // Resolve __pixiRef paths back to local PIXI objects
         var resolvedArgs = [];
+        var resolveFailed = false;
         for (var i = 0; i < payload.args.length; i++) {
           var a = payload.args[i];
           if (a && typeof a === 'object' && a.__pixiRef && a.path) {
             var obj = getChildByPath(cm, a.path);
             if (obj) {
               resolvedArgs.push(obj);
-              log('📎 Resolved path:', JSON.stringify(a.path));
             } else {
-              log('⚠ Could not resolve pixiRef:', JSON.stringify(a.path));
-              resolvedArgs.push(null);
+              resolveFailed = true;
+              break;
             }
           } else if (a && typeof a === 'object' && a !== null) {
-            // Check for nested __pixiRef in object properties
             var resolved = {};
             var keys = Object.keys(a);
             var hasRef = false;
             for (var j = 0; j < keys.length; j++) {
               var val = a[keys[j]];
               if (val && typeof val === 'object' && val.__pixiRef && val.path) {
-                resolved[keys[j]] = getChildByPath(cm, val.path);
-                hasRef = true;
+                var rObj = getChildByPath(cm, val.path);
+                if (rObj) { resolved[keys[j]] = rObj; hasRef = true; }
+                else { resolveFailed = true; break; }
               } else {
                 resolved[keys[j]] = val;
               }
             }
+            if (resolveFailed) break;
             resolvedArgs.push(hasRef ? resolved : a);
           } else {
             resolvedArgs.push(a);
           }
         }
-        _origExecute.apply(cm, resolvedArgs);
+        if (!resolveFailed) {
+          _origExecute.apply(cm, resolvedArgs);
+        }
       }
     } catch (e) { log('❌ Replay error:', e.message); }
     _isSyncing = false;
@@ -541,9 +544,15 @@
   // Broadcast to BC + WebRTC
   function broadcastEvent(action, payload) {
     var msg = { type: MSG_PREFIX, action: action, payload: payload || {}, timestamp: Date.now(), userId: _userId };
-    // Record non-canvas commands for late joiners
+    // Record non-canvas commands for late joiners (skip __pixiRef interactions)
     if (action === 'EXECUTE_CMD' || action === 'DISPATCH_ACTION') {
-      _commandHistory.push(msg);
+      var hasPixiRef = false;
+      if (payload && payload.args) {
+        for (var h = 0; h < payload.args.length; h++) {
+          if (payload.args[h] && payload.args[h].__pixiRef) { hasPixiRef = true; break; }
+        }
+      }
+      if (!hasPixiRef) _commandHistory.push(msg);
     }
     if (_bc) { try { _bc.postMessage(msg); } catch (e) {} }
     for (var i = 0; i < _peerConns.length; i++) {

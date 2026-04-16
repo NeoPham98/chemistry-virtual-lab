@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NB Lab Sync Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f0f1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #f97316, #fb923c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.3px;
+    }
+    .header .room-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .room-badge {
+      background: rgba(249,115,22,0.12);
+      border: 1px solid rgba(249,115,22,0.3);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fb923c;
+      letter-spacing: 0.5px;
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #ef4444;
+      transition: background 0.3s;
+    }
+    .status-dot.connected { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.5); }
+    .status-text {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    /* Main layout */
+    .main {
+      display: flex;
+      height: calc(100vh - 60px);
+    }
+
+    /* Panel */
+    .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(255,255,255,0.06);
+      position: relative;
+    }
+    .panel:last-child { border-right: none; }
+
+    .panel-header {
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .role-tag {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .role-tag.presenter {
+      background: rgba(249,115,22,0.15);
+      color: #fb923c;
+      border: 1px solid rgba(249,115,22,0.3);
+    }
+    .role-tag.viewer {
+      background: rgba(59,130,246,0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59,130,246,0.3);
+    }
+
+    .panel-body {
+      flex: 1;
+      position: relative;
+      background: #0a0a14;
+    }
+
+    /* Log area */
+    .log-panel {
+      width: 300px;
+      background: #0d0d1a;
+      border-left: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+    }
+    .log-panel .panel-header {
+      flex-shrink: 0;
+    }
+    .log-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      font-family: 'Fira Code', 'Consolas', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+    .log-entry {
+      padding: 3px 6px;
+      border-radius: 3px;
+      margin-bottom: 2px;
+      word-break: break-all;
+    }
+    .log-entry.info { color: #94a3b8; }
+    .log-entry.success { color: #4ade80; background: rgba(34,197,94,0.06); }
+    .log-entry.warn { color: #fbbf24; background: rgba(251,191,36,0.06); }
+    .log-entry.error { color: #f87171; background: rgba(248,113,113,0.06); }
+    .log-entry .time { color: #475569; margin-right: 6px; }
+
+    /* Controls */
+    .controls {
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.02);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 7px 16px;
+      border-radius: 7px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: #e2e8f0;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.2);
+    }
+    .btn.primary {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      border: none;
+      color: #fff;
+      font-weight: 600;
+    }
+    .btn.primary:hover {
+      box-shadow: 0 4px 12px rgba(249,115,22,0.4);
+      transform: translateY(-1px);
+    }
+    .btn.danger {
+      background: rgba(239,68,68,0.12);
+      border-color: rgba(239,68,68,0.3);
+      color: #fca5a5;
+    }
+
+    /* Peer count */
+    .peer-count {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .peer-count strong {
+      color: #e2e8f0;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🔬 NB Lab Sync — Demo</h1>
+    <div class="room-info">
+      <div class="room-badge" id="roomBadge">Room: ---</div>
+      <div class="peer-count">
+        Peers: <strong id="peerCount">0</strong>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-text" id="statusText">Disconnected</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Presenter Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="role-tag presenter">Presenter</span>
+          Teacher View
+        </div>
+      </div>
+      <div class="panel-body" id="presenterContainer"></div>
+      <div class="controls">
+        <button class="btn primary" onclick="startPresenter()">▶ Start Presenter</button>
+        <button class="btn" onclick="requestSnapshot('presenter')">📸 Snapshot</button>
+      </div>
+    </div>
+
+    <!-- Viewer Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="role-tag viewer">Viewer</span>
+          Student View
+        </div>
+      </div>
+      <div class="panel-body" id="viewerContainer"></div>
+      <div class="controls">
+        <button class="btn primary" onclick="startViewer()">▶ Start Viewer</button>
+        <button class="btn danger" onclick="destroyAll()">✕ Destroy All</button>
+      </div>
+    </div>
+
+    <!-- Log Panel -->
+    <div class="log-panel">
+      <div class="panel-header">
+        <div class="panel-title">📋 Sync Log</div>
+        <button class="btn" onclick="clearLog()" style="padding:4px 10px;font-size:11px;">Clear</button>
+      </div>
+      <div class="log-content" id="logContent"></div>
+    </div>
+  </div>
+
+  <script src="/js/nb-sync-sdk.js"></script>
+  <script>
+    var presenterLab = null;
+    var viewerLab = null;
+    var roomId = 'demo-' + Math.random().toString(36).substr(2, 6);
+
+    document.getElementById('roomBadge').textContent = 'Room: ' + roomId;
+
+    function addLog(message, level) {
+      level = level || 'info';
+      var el = document.getElementById('logContent');
+      var entry = document.createElement('div');
+      entry.className = 'log-entry ' + level;
+      var time = new Date().toLocaleTimeString('en', { hour12: false });
+      entry.innerHTML = '<span class="time">' + time + '</span>' + message;
+      el.appendChild(entry);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('logContent').innerHTML = '';
+    }
+
+    function updateStatus(connected, text) {
+      var dot = document.getElementById('statusDot');
+      var txt = document.getElementById('statusText');
+      dot.className = 'status-dot' + (connected ? ' connected' : '');
+      txt.textContent = text || (connected ? 'Connected' : 'Disconnected');
+    }
+
+    function updatePeerCount() {
+      var count = 0;
+      if (presenterLab) count += presenterLab.getConnectedPeers().length;
+      if (viewerLab) count += viewerLab.getConnectedPeers().length;
+      document.getElementById('peerCount').textContent = count;
+    }
+
+    function startPresenter() {
+      if (presenterLab) { addLog('Presenter already running', 'warn'); return; }
+      
+      addLog('Starting presenter...', 'info');
+      presenterLab = new NBLabSync({
+        containerEl: document.getElementById('presenterContainer'),
+        labUrl: '/chemical/virtuallab.html?moduleId=9&ignoreBlock=true',
+        role: 'presenter',
+        roomId: roomId,
+        userId: 'teacher-001',
+        mode: 'local',
+        debug: false
+      });
+
+      presenterLab.on('ready', function(info) {
+        addLog('✅ Presenter lab ready', 'success');
+        updateStatus(true, 'Presenter ready');
+      });
+
+      presenterLab.on('peerOpen', function(id) {
+        addLog('Presenter peer ID: ' + id, 'info');
+      });
+
+      presenterLab.on('peerConnected', function(peerId) {
+        addLog('🔗 Viewer connected: ' + peerId, 'success');
+        updatePeerCount();
+      });
+
+      presenterLab.on('peerDisconnected', function(peerId) {
+        addLog('❌ Viewer disconnected: ' + peerId, 'warn');
+        updatePeerCount();
+      });
+
+      presenterLab.on('snapshot', function(data) {
+        addLog('📸 Snapshot captured & broadcast', 'info');
+      });
+
+      presenterLab.on('command', function(data) {
+        addLog('⚡ Command: ' + (data.cmdName || 'unknown'), 'info');
+      });
+
+      presenterLab.on('error', function(err) {
+        addLog('❗ Presenter error: ' + err.type, 'error');
+      });
+    }
+
+    function startViewer() {
+      if (viewerLab) { addLog('Viewer already running', 'warn'); return; }
+      
+      addLog('Starting viewer...', 'info');
+      viewerLab = new NBLabSync({
+        containerEl: document.getElementById('viewerContainer'),
+        labUrl: '/chemical/virtuallab.html?moduleId=9&ignoreBlock=true',
+        role: 'viewer',
+        roomId: roomId,
+        userId: 'student-001',
+        mode: 'local',
+        debug: false
+      });
+
+      viewerLab.on('ready', function(info) {
+        addLog('✅ Viewer lab ready', 'success');
+      });
+
+      viewerLab.on('peerOpen', function(id) {
+        addLog('Viewer peer ID: ' + id, 'info');
+      });
+
+      viewerLab.on('peerConnected', function(peerId) {
+        addLog('🔗 Connected to presenter: ' + peerId, 'success');
+        updateStatus(true, 'Synced');
+        updatePeerCount();
+      });
+
+      viewerLab.on('peerDisconnected', function(peerId) {
+        addLog('❌ Presenter disconnected: ' + peerId, 'warn');
+        updateStatus(false, 'Disconnected');
+        updatePeerCount();
+      });
+
+      viewerLab.on('snapshotReceived', function(data) {
+        addLog('📥 Snapshot received & applied', 'success');
+      });
+
+      viewerLab.on('error', function(err) {
+        addLog('❗ Viewer error: ' + err.type, 'error');
+        if (err.type === 'peer-unavailable') {
+          addLog('⏳ Presenter not online yet, retrying...', 'warn');
+        }
+      });
+    }
+
+    function requestSnapshot(which) {
+      if (which === 'presenter' && presenterLab) {
+        presenterLab.requestSnapshot();
+        addLog('Snapshot requested from presenter iframe', 'info');
+      }
+    }
+
+    function destroyAll() {
+      if (presenterLab) { presenterLab.destroy(); presenterLab = null; }
+      if (viewerLab) { viewerLab.destroy(); viewerLab = null; }
+      updateStatus(false);
+      updatePeerCount();
+      addLog('All instances destroyed', 'warn');
+    }
+
+    // Auto-start
+    addLog('Demo loaded. Click "Start Presenter" first, then "Start Viewer"', 'info');
+    addLog('Room ID: ' + roomId, 'success');
+  </script>
+</body>
+</html>

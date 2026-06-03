@@ -50,6 +50,339 @@
       }
     })();
 
+    window.__nbExperimentState = {
+      selected: null,
+      restoreApplied: false,
+      restoreError: null,
+      restorePollingStarted: false,
+      saveInFlight: false,
+    };
+
+    function showNbPopup(options) {
+      try {
+        var title = (options && options.title) || 'Thông báo';
+        var message = (options && options.message) || '';
+        var tone = (options && options.tone) || 'info';
+
+        var existing = document.getElementById('nb-save-popup');
+        if (existing) {
+          existing.parentNode.removeChild(existing);
+        }
+
+        var backdrop = document.createElement('div');
+        backdrop.id = 'nb-save-popup';
+        backdrop.setAttribute('role', 'presentation');
+        backdrop.tabIndex = -1;
+        backdrop.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.55);backdrop-filter:blur(2px);';
+
+        var dialog = document.createElement('div');
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-modal', 'true');
+        dialog.setAttribute('aria-label', title);
+        dialog.tabIndex = -1;
+        dialog.style.cssText = 'position:relative;z-index:2147483647;width:min(420px,100%);background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(15,23,42,.22);padding:20px 18px;';
+        dialog.addEventListener('click', function (e) { e.stopPropagation(); });
+
+        var header = document.createElement('div');
+        header.style.cssText = 'font-size:16px;font-weight:700;letter-spacing:-.01em;color:#0f172a;margin:0 0 8px;';
+        header.textContent = title;
+
+        var body = document.createElement('div');
+        body.style.cssText = 'font-size:14px;line-height:1.6;color:#475569;margin:0 0 16px;';
+        body.textContent = message;
+
+        var actions = document.createElement('div');
+        actions.style.cssText = 'display:flex;justify-content:flex-end;gap:10px;';
+
+        var ok = document.createElement('button');
+        ok.type = 'button';
+        ok.textContent = 'OK';
+        ok.style.cssText = 'min-height:44px;border-radius:12px;padding:0 16px;border:1px solid transparent;font-weight:700;cursor:pointer;color:#fff;background:' + (tone === 'danger' ? '#dc2626' : '#3555d3') + ';';
+
+        function close() {
+          if (backdrop && backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+        }
+
+        ok.addEventListener('click', close);
+        backdrop.addEventListener('click', function (e) { if (e.target === backdrop) close(); });
+        backdrop.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') close();
+        });
+
+        actions.appendChild(ok);
+        dialog.appendChild(header);
+        dialog.appendChild(body);
+        dialog.appendChild(actions);
+        backdrop.appendChild(dialog);
+        document.body.appendChild(backdrop);
+
+        window.setTimeout(function () {
+          try {
+            backdrop.focus();
+            ok.focus();
+          } catch (e) { }
+        }, 0);
+      } catch (e) {
+        window.alert((options && options.message) || '');
+      }
+    }
+
+    function captureExperimentThumbnail() {
+      var candidates = Array.prototype.slice.call(document.querySelectorAll('canvas'));
+      var source = candidates
+        .filter(function (item) { return item.width > 0 && item.height > 0; })
+        .sort(function (a, b) { return (b.width * b.height) - (a.width * a.height); })[0];
+
+      if (!source || typeof source.toDataURL !== 'function') {
+        return '';
+      }
+
+      try {
+        var maxWidth = 320;
+        var ratio = source.height / source.width;
+        var targetWidth = Math.min(maxWidth, source.width);
+        var targetHeight = Math.max(1, Math.round(targetWidth * ratio));
+        var thumbnailCanvas = document.createElement('canvas');
+        thumbnailCanvas.width = targetWidth;
+        thumbnailCanvas.height = targetHeight;
+        var context = thumbnailCanvas.getContext('2d');
+        if (!context) {
+          return source.toDataURL('image/png');
+        }
+        context.drawImage(source, 0, 0, targetWidth, targetHeight);
+        return thumbnailCanvas.toDataURL('image/jpeg', 0.82);
+      } catch (error) {
+        return '';
+      }
+    }
+
+    window.__nbSaveExperiment = async function () {
+      var state = window.__nbExperimentState || {};
+      if (state.saveInFlight) {
+        return;
+      }
+
+      if (!window.chemicalMain || typeof window.chemicalMain.execute !== 'function' || !window.NBCommand || !window.NBCommand.GET_DATA) {
+        showNbPopup({ title: 'Không thể lưu', message: 'Lab chưa sẵn sàng để lưu.', tone: 'danger' });
+        return;
+      }
+
+      // Save modal
+      var defaultName = state.selected && state.selected.name ? state.selected.name : 'Untitled Experiment';
+      var defaultDesc = state.selected && state.selected.description ? state.selected.description : '';
+
+      var saveModalBackdrop = document.createElement('div');
+      saveModalBackdrop.id = 'nb-save-modal';
+      saveModalBackdrop.setAttribute('role', 'presentation');
+      saveModalBackdrop.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.55);backdrop-filter:blur(2px);';
+
+      var saveModal = document.createElement('div');
+      saveModal.setAttribute('role', 'dialog');
+      saveModal.setAttribute('aria-modal', 'true');
+      saveModal.setAttribute('aria-label', 'Lưu thí nghiệm');
+      saveModal.style.cssText = 'width:min(520px,100%);background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(15,23,42,.22);padding:18px 18px 14px;';
+
+      var saveTitle = document.createElement('div');
+      saveTitle.style.cssText = 'font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0f172a;margin:0 0 12px;';
+      saveTitle.textContent = 'Lưu thí nghiệm';
+
+      var form = document.createElement('div');
+      form.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
+
+      var nameLabel = document.createElement('label');
+      nameLabel.textContent = 'Tên thí nghiệm';
+      nameLabel.style.cssText = 'font-size:13px;font-weight:700;color:#0f172a;margin:0;';
+
+      var nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = defaultName;
+      nameInput.autocomplete = 'off';
+      nameInput.style.cssText = 'height:44px;border-radius:12px;border:1px solid rgba(15,23,42,.14);padding:0 12px;font-size:14px;outline:none;';
+
+      var descLabel = document.createElement('label');
+      descLabel.textContent = 'Mô tả (tuỳ chọn)';
+      descLabel.style.cssText = 'font-size:13px;font-weight:700;color:#0f172a;margin:2px 0 0;';
+
+      var descInput = document.createElement('textarea');
+      descInput.value = defaultDesc;
+      descInput.rows = 3;
+      descInput.style.cssText = 'border-radius:12px;border:1px solid rgba(15,23,42,.14);padding:10px 12px;font-size:14px;outline:none;resize:vertical;min-height:88px;max-height:220px;';
+
+      var actions2 = document.createElement('div');
+      actions2.style.cssText = 'display:flex;justify-content:flex-end;gap:10px;margin-top:12px;';
+
+      var cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.textContent = 'Hủy';
+      cancelBtn.style.cssText = 'min-height:44px;border-radius:12px;padding:0 16px;border:1px solid rgba(15,23,42,.14);font-weight:800;cursor:pointer;background:#fff;color:#0f172a;';
+
+      var confirmBtn = document.createElement('button');
+      confirmBtn.type = 'button';
+      confirmBtn.textContent = 'Lưu';
+      confirmBtn.style.cssText = 'min-height:44px;border-radius:12px;padding:0 16px;border:1px solid transparent;font-weight:800;cursor:pointer;color:#fff;background:#3555d3;';
+
+      function closeModal() {
+        if (saveModalBackdrop && saveModalBackdrop.parentNode) saveModalBackdrop.parentNode.removeChild(saveModalBackdrop);
+      }
+
+      var modalPromise = new Promise(function (resolve) {
+        cancelBtn.addEventListener('click', function () {
+          closeModal();
+          resolve(null);
+        });
+
+
+        confirmBtn.addEventListener('click', function () {
+          var n = (nameInput.value || '').trim();
+          if (!n) return;
+          var d = (descInput.value || '').trim();
+          closeModal();
+          resolve({ name: n, description: d });
+        });
+
+        saveModalBackdrop.addEventListener('click', function (e) { if (e.target === saveModalBackdrop) { closeModal(); resolve(null); } });
+        saveModal.addEventListener('click', function (e) { e.stopPropagation(); });
+        saveModalBackdrop.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeModal(); resolve(null); } });
+      });
+
+      form.appendChild(nameLabel);
+      form.appendChild(nameInput);
+      form.appendChild(descLabel);
+      form.appendChild(descInput);
+      actions2.appendChild(cancelBtn);
+      actions2.appendChild(confirmBtn);
+      form.appendChild(actions2);
+
+      saveModal.appendChild(saveTitle);
+      saveModal.appendChild(form);
+      saveModalBackdrop.appendChild(saveModal);
+      document.body.appendChild(saveModalBackdrop);
+
+      window.setTimeout(function () { try { nameInput.focus(); } catch (e) { } }, 0);
+
+      var modalResult = await modalPromise;
+      if (!modalResult) return;
+      var name = modalResult.name;
+      var description = modalResult.description;
+      var content = '';
+
+      try {
+        content = window.chemicalMain.execute(window.NBCommand.GET_DATA);
+      } catch (error) {
+        showNbPopup({ title: 'Không thể lưu', message: 'Không lấy được dữ liệu thí nghiệm để lưu.', tone: 'danger' });
+        return;
+      }
+
+      if (!content) {
+        showNbPopup({ title: 'Không thể lưu', message: 'Dữ liệu thí nghiệm đang rỗng.', tone: 'danger' });
+        return;
+      }
+
+      state.saveInFlight = true;
+
+      try {
+        var thumbnailUrl = captureExperimentThumbnail();
+        var payload = {
+          name: name,
+          description: description,
+          moduleId: Number(new URLSearchParams(window.location.search).get('moduleId')) || 9,
+          content: content,
+          thumbnailUrl: thumbnailUrl,
+        };
+
+        var endpoint = '/experiment/create';
+        if (state.selected && state.selected.id) {
+          endpoint = '/experiment/update';
+          payload.id = state.selected.id;
+        }
+
+        var response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        var json = await response.json();
+        if (!response.ok || json.code !== 200) {
+          throw new Error(json.msg || 'Save failed');
+        }
+
+        state.selected = json.data;
+        window.__nb_selected_experiment = json.data;
+        showNbPopup({ title: 'Lưu thành công', message: name ? ('“' + name + '”') : 'Thí nghiệm đã được lưu.', tone: 'success' });
+      } catch (error) {
+        showNbPopup({ title: 'Lưu thất bại', message: error && error.message ? error.message : 'Lưu thí nghiệm thất bại.', tone: 'danger' });
+      } finally {
+        state.saveInFlight = false;
+      }
+    };
+
+    (function () {
+      var experimentId = new URLSearchParams(window.location.search).get('experimentId');
+      if (!experimentId) {
+        return;
+      }
+
+      fetch('/experiment/detail?id=' + encodeURIComponent(experimentId))
+        .then(function (response) { return response.json(); })
+        .then(function (json) {
+          if (!json || json.code !== 200 || !json.data) {
+            throw new Error(json && json.msg ? json.msg : 'Load experiment failed');
+          }
+          window.__nbExperimentState.selected = json.data;
+          window.__nb_selected_experiment = json.data;
+        })
+        .catch(function (error) {
+          window.__nbExperimentState.restoreError = error && error.message ? error.message : 'Load experiment failed';
+        });
+    })();
+
+    window.__nbApplyExperimentRestore = function () {
+      var state = window.__nbExperimentState || {};
+      var experiment = state.selected;
+      if (!experiment || state.restoreApplied || !window.chemicalMain || !window.NBCommand) {
+        return false;
+      }
+
+      if (!window.chemicalMain.creationComplete || typeof window.chemicalMain.execute !== 'function') {
+        return false;
+      }
+
+      try {
+        if (experiment.content) {
+          window.chemicalMain.execute(window.NBCommand.RESTORE_DATA, experiment.content);
+        } else if (experiment.id && window.NBCommand.SHOW_EXPERIMENT_BY_ID) {
+          window.chemicalMain.execute(window.NBCommand.SHOW_EXPERIMENT_BY_ID, { id: experiment.id });
+        }
+        state.restoreApplied = true;
+        return true;
+      } catch (error) {
+        state.restoreError = error && error.message ? error.message : 'Restore failed';
+        return false;
+      }
+    };
+
+    window.__nbStartRestorePolling = function () {
+      var state = window.__nbExperimentState || {};
+      if (state.restorePollingStarted) {
+        return;
+      }
+
+      state.restorePollingStarted = true;
+      var tries = 0;
+      var timer = setInterval(function () {
+        tries += 1;
+        if (window.__nbApplyExperimentRestore()) {
+          clearInterval(timer);
+          return;
+        }
+        if (tries > 120) {
+          clearInterval(timer);
+        }
+      }, 1000);
+    };
+
+    window.__nbStartRestorePolling();
+
     // === LOCAL FIX: Unlock all VIP-gated equipment via built-in backdoor ===
     // umi.js internally checks localStorage.getItem("un_lock_vip") to bypass VIP gate
     localStorage.setItem('un_lock_vip', '1');
@@ -479,6 +812,43 @@
       letter-spacing: 0.8px !important;
       font-family: 'Inter', 'Be Vietnam Pro', sans-serif !important;
     }
+
+    #nb-experiment-actions {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 2147483647;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.88);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.28);
+      backdrop-filter: blur(12px);
+    }
+
+    #nb-experiment-actions button,
+    #nb-experiment-actions a {
+      height: 38px;
+      padding: 0 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    #nb-experiment-actions .primary {
+      border: none;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+    }
   </style>
   <link rel="stylesheet" href="/umi.a81b15ee.css" />
   <script>
@@ -492,6 +862,10 @@
 <body>
 
   <div id="root"></div>
+  <div id="nb-experiment-actions">
+    <a href="/experiments">Kho thí nghiệm</a>
+    <button class="primary" onclick="window.__nbSaveExperiment()">Lưu thí nghiệm</button>
+  </div>
 
   <script src="/umi.ffcb3e70.js"></script>
 

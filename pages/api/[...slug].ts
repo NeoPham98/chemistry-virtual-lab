@@ -1,5 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
+import {
+  createExperiment,
+  deleteExperiment,
+  getExperimentDetail,
+  isSupabaseReady,
+  listExperiments,
+  updateExperiment,
+} from '@/lib/experiments'
+
 const MOCK_USER = {
     code: 200,
     data: {
@@ -35,19 +44,6 @@ const MOCK_LOGIN_CHECK = {
     msg: 'success',
 }
 
-const MOCK_EXPERIMENT = {
-    code: 200,
-    data: {
-        id: 'local_exp_001',
-        name: 'Untitled Experiment',
-        content: '',
-        moduleId: 9,
-        createTime: '2026-01-01T00:00:00Z',
-        updateTime: '2026-01-01T00:00:00Z',
-    },
-    msg: 'success',
-}
-
 const MOCK_EMPTY_LIST = {
     code: 200,
     data: { list: [], total: 0, page: 1, pageSize: 20 },
@@ -55,6 +51,122 @@ const MOCK_EMPTY_LIST = {
 }
 
 const MOCK_SUCCESS = { code: 200, data: {}, msg: 'success' }
+
+function getRequestBody(req: NextApiRequest) {
+    if (!req.body) {
+        return {}
+    }
+
+    if (typeof req.body === 'string') {
+        try {
+            return JSON.parse(req.body)
+        } catch {
+            return {}
+        }
+    }
+
+    return req.body
+}
+
+function getExperimentPath(slug: string[]) {
+    return '/' + slug.slice(1).join('/')
+}
+
+async function handleExperimentRoute(req: NextApiRequest, res: NextApiResponse, slug: string[]) {
+    if (!isSupabaseReady()) {
+        res.status(200).json(MOCK_EMPTY_LIST)
+        return
+    }
+
+    const experimentPath = getExperimentPath(slug).toLowerCase()
+    const body = getRequestBody(req)
+
+    try {
+        if (req.method === 'GET' && experimentPath === '/list') {
+            const data = await listExperiments({
+                page: req.query.page,
+                pageSize: req.query.pageSize,
+                keyword: req.query.keyword,
+            })
+            res.status(200).json({ code: 200, data, msg: 'success' })
+            return
+        }
+
+        if (req.method === 'GET' && experimentPath === '/detail') {
+            const id = typeof req.query.id === 'string' ? req.query.id : ''
+            if (!id) {
+                res.status(400).json({ code: 400, data: null, msg: 'Missing experiment id' })
+                return
+            }
+
+            const data = await getExperimentDetail(id)
+            if (!data) {
+                res.status(404).json({ code: 404, data: null, msg: 'Experiment not found' })
+                return
+            }
+
+            res.status(200).json({ code: 200, data, msg: 'success' })
+            return
+        }
+
+        if (req.method === 'POST' && experimentPath === '/create') {
+            const name = typeof body.name === 'string' ? body.name.trim() : ''
+            const content = typeof body.content === 'string' ? body.content : ''
+            if (!name || !content) {
+                res.status(400).json({ code: 400, data: null, msg: 'Missing required fields' })
+                return
+            }
+
+            const data = await createExperiment({
+                name,
+                description: typeof body.description === 'string' ? body.description : null,
+                moduleId: Number(body.moduleId) || 9,
+                content,
+                thumbnailUrl: typeof body.thumbnailUrl === 'string' ? body.thumbnailUrl : null,
+            })
+            res.status(200).json({ code: 200, data, msg: 'success' })
+            return
+        }
+
+        if (req.method === 'POST' && experimentPath === '/update') {
+            const id = typeof body.id === 'string' ? body.id : ''
+            const name = typeof body.name === 'string' ? body.name.trim() : ''
+            const content = typeof body.content === 'string' ? body.content : ''
+            if (!id || !name || !content) {
+                res.status(400).json({ code: 400, data: null, msg: 'Missing required fields' })
+                return
+            }
+
+            const data = await updateExperiment({
+                id,
+                name,
+                description: typeof body.description === 'string' ? body.description : null,
+                moduleId: Number(body.moduleId) || 9,
+                content,
+                thumbnailUrl: typeof body.thumbnailUrl === 'string' ? body.thumbnailUrl : null,
+            })
+            res.status(200).json({ code: 200, data, msg: 'success' })
+            return
+        }
+
+        if (req.method === 'POST' && experimentPath === '/delete') {
+            const id = typeof body.id === 'string' ? body.id : ''
+            if (!id) {
+                res.status(400).json({ code: 400, data: null, msg: 'Missing experiment id' })
+                return
+            }
+
+            await deleteExperiment(id)
+            res.status(200).json(MOCK_SUCCESS)
+            return
+        }
+
+        res.status(404).json({ code: 404, data: null, msg: 'Experiment route not found' })
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error'
+        res.status(500).json({ code: 500, data: null, msg: message })
+    }
+}
 
 const MOCK_ACTIVATE = {
     code: 200,
@@ -71,10 +183,6 @@ function getMockResponse(path: string): object {
         return MOCK_USER
     if (p.includes('/activate') || p.includes('/activation') || p.includes('/isactive'))
         return MOCK_ACTIVATE
-    if (p.includes('/experiment') || p.includes('/module')) {
-        if (p.includes('list')) return MOCK_EMPTY_LIST
-        return MOCK_EXPERIMENT
-    }
     if (['/save', '/update', '/create', '/delete'].some(x => p.includes(x)))
         return MOCK_SUCCESS
     if (['/vip', '/payment', '/rate'].some(x => p.includes(x)))
@@ -85,7 +193,6 @@ function getMockResponse(path: string): object {
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
     const slug = (req.query.slug as string[]) || []
-    const path = '/' + slug.join('/')
 
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS,PUT,DELETE')
@@ -96,5 +203,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         return
     }
 
+    const first = (slug[0] || '').toLowerCase()
+    if (first === 'experiment' || first === 'module') {
+        return handleExperimentRoute(req, res, slug)
+    }
+
+    const path = '/' + slug.join('/')
     res.status(200).json(getMockResponse(path))
 }

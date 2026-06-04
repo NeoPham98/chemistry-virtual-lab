@@ -1,1 +1,1 @@
-{}
+{"type":"sprite","x":0,"y":0,"name":"","0":{"type":"bitmap","libName":"Bitmap 6","x":88.5,"y":127,"r":0,"sx":1,"sy":1,"skewX":0,"skewY":0},"1":{"x":107.9,"y":139.7,"name":"pointer","type":"sprite","r":0,"sx":1,"sy":1,"a":1,"skewX":0,"skewY":0,"0":{"type":"bitmap","libName":"Bitmap 7","x":-3.5,"y":-95,"r":0,"sx":1,"sy":1,"skewX":0,"skewY":0}},"2":{"type":"bitmap","libName":"Bitmap 5","x":0,"y":0,"r":0,"sx":1,"sy":1,"skewX":0,"skewY":0}}

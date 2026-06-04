@@ -1,1 +1,1 @@
-{}
+{"type":"sprite","x":0,"y":0,"name":"","0":{"x":0,"y":44.8,"name":"dripArea","type":"sprite","r":0,"sx":0.340576171875,"sy":0.411865234375,"a":1,"skewX":0,"skewY":0,"0":{"type":"shape","path":[255,-11.15,-15.55,2,-11.15,15.55,2,11.15,15.55,2,11.15,-15.55,2,-11.15,-15.55,2,-11.15,-15.55,1,0,-65536,33]}},"1":{"x":-15.3,"y":16,"name":"texture","type":"sprite","r":0,"sx":1,"sy":1,"a":1,"skewX":0,"skewY":0,"linkageClassName":"nb.SetRenderableToFalse","0":{"type":"bitmap","libName":"rope","x":0,"y":0,"r":0,"sx":1,"sy":1,"skewX":0,"skewY":0}}}

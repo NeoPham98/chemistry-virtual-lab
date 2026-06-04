@@ -63,6 +63,8 @@
         var title = (options && options.title) || 'Thông báo';
         var message = (options && options.message) || '';
         var tone = (options && options.tone) || 'info';
+        var okText = (options && options.okText) || 'OK';
+        var cancelText = options && options.cancelText;
 
         var existing = document.getElementById('nb-save-popup');
         if (existing) {
@@ -96,17 +98,32 @@
 
         var ok = document.createElement('button');
         ok.type = 'button';
-        ok.textContent = 'OK';
+        ok.textContent = okText;
         ok.style.cssText = 'min-height:44px;border-radius:12px;padding:0 16px;border:1px solid transparent;font-weight:700;cursor:pointer;color:#fff;background:' + (tone === 'danger' ? '#dc2626' : '#3555d3') + ';';
 
-        function close() {
-          if (backdrop && backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+        var cancel = null;
+        if (cancelText) {
+          cancel = document.createElement('button');
+          cancel.type = 'button';
+          cancel.textContent = cancelText;
+          cancel.style.cssText = 'min-height:44px;border-radius:12px;padding:0 16px;border:1px solid rgba(15,23,42,.14);font-weight:700;cursor:pointer;color:#0f172a;background:#fff;';
         }
 
-        ok.addEventListener('click', close);
-        backdrop.addEventListener('click', function (e) { if (e.target === backdrop) close(); });
+        function close(result) {
+          if (backdrop && backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+          if (typeof options.onClose === 'function') {
+            options.onClose(result);
+          }
+        }
+
+        ok.addEventListener('click', function () { close(true); });
+        if (cancel) {
+          cancel.addEventListener('click', function () { close(false); });
+          actions.appendChild(cancel);
+        }
+        backdrop.addEventListener('click', function (e) { if (e.target === backdrop) close(false); });
         backdrop.addEventListener('keydown', function (e) {
-          if (e.key === 'Escape') close();
+          if (e.key === 'Escape') close(false);
         });
 
         actions.appendChild(ok);
@@ -119,7 +136,7 @@
         window.setTimeout(function () {
           try {
             backdrop.focus();
-            ok.focus();
+            (cancel || ok).focus();
           } catch (e) { }
         }, 0);
       } catch (e) {
@@ -351,20 +368,49 @@
       }
 
       var modalPromise = new Promise(function (resolve) {
-        cancelBtn.addEventListener('click', function () {
+        var settled = false;
+
+        function cleanup() {
+          document.removeEventListener('keydown', onKeyDown);
+        }
+
+        function finish(result) {
+          if (settled) return;
+          settled = true;
+          cleanup();
           closeModal();
-          resolve(null);
+          resolve(result);
+        }
+
+        function onKeyDown(e) {
+          if (e && e.key === 'Escape') {
+            finish(null);
+          }
+        }
+
+        cancelBtn.addEventListener('click', function () {
+          finish(null);
         });
 
         confirmBtn.addEventListener('click', function () {
           var n = (nameInput.value || '').trim();
           if (!n) return;
           var d = (descInput.value || '').trim();
-          closeModal();
-          resolve({ name: n, description: d });
+          finish({ name: n, description: d });
         });
 
+        // Click outside dialog
+        saveModalBackdrop.addEventListener('click', function (e) {
+          if (e.target === saveModalBackdrop) {
+            finish(null);
+          }
+        });
+
+        // Don't close when clicking inside dialog
         saveModal.addEventListener('click', function (e) { e.stopPropagation(); });
+
+        // Escape closes modal
+        document.addEventListener('keydown', onKeyDown);
       });
 
       form.appendChild(nameLabel);
@@ -939,40 +985,53 @@
     }
 
     #nb-experiment-actions {
-      position: fixed;
-      right: 16px;
-      bottom: 16px;
-      z-index: 2147483647;
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 10px;
-      border-radius: 12px;
-      background: rgba(15, 23, 42, 0.88);
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.28);
-      backdrop-filter: blur(12px);
+      margin-left: 8px;
     }
 
     #nb-experiment-actions button,
     #nb-experiment-actions a {
-      height: 38px;
-      padding: 0 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      height: 32px;
+      padding: 0 13px;
+      border-radius: 7px;
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
+      color: rgba(255, 255, 255, 0.88);
       text-decoration: none;
       cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 12.5px;
+      font-weight: 500;
       background: rgba(255, 255, 255, 0.08);
+      transition: all 0.18s ease;
+      font-family: 'Inter', 'Be Vietnam Pro', sans-serif;
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+    }
+
+    #nb-experiment-actions button:hover,
+    #nb-experiment-actions a:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.42);
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
     }
 
     #nb-experiment-actions .primary {
-      border: none;
-      background: linear-gradient(135deg, #f97316, #ea580c);
+      border: 1.5px solid rgba(249, 115, 22, 0.42);
+      background: rgba(249, 115, 22, 0.12);
+      color: #fdba74;
+    }
+
+    #nb-experiment-actions .primary:hover {
+      background: rgba(249, 115, 22, 0.22);
+      border-color: rgba(249, 115, 22, 0.72);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.22);
     }
   </style>
   <link rel="stylesheet" href="/umi.a81b15ee.css" />
@@ -987,10 +1046,6 @@
 <body>
 
   <div id="root"></div>
-  <div id="nb-experiment-actions">
-    <a href="/experiments">Kho thí nghiệm</a>
-    <button class="primary" onclick="window.__nbSaveExperiment()">Lưu thí nghiệm</button>
-  </div>
 
   <script src="/umi.ffcb3e70.js"></script>
 
@@ -1191,11 +1246,65 @@
           header.appendChild(logo);
         }
 
-        setTimeout(injectTHSLogo, 600);
-        setTimeout(injectTHSLogo, 2000);
-        setTimeout(injectTHSLogo, 4000);
+        function injectExperimentHeaderButtons() {
+          var header = getHeader();
+          if (!header || document.getElementById('nb-experiment-actions')) return;
+
+          var host = header.querySelector('.headerLeftWrap___3xzV1') ||
+            header.querySelector('.headerLeft___3QkjE') ||
+            header;
+          if (!host) return;
+
+          var actions = document.createElement('div');
+          actions.id = 'nb-experiment-actions';
+
+          var link = document.createElement('a');
+          link.href = '/experiments';
+          link.textContent = 'Kho thí nghiệm';
+          link.addEventListener('click', function (event) {
+            event.preventDefault();
+            showNbPopup({
+              title: 'Xác nhận thoát',
+              message: 'Bạn có muốn thoát màn hình hiện tại để vào Kho thí nghiệm không?',
+              okText: 'Thoát',
+              cancelText: 'Ở lại',
+              tone: 'danger',
+              onClose: function (confirmed) {
+                if (confirmed) {
+                  try {
+                    window.sessionStorage.setItem('ths-transition-splash', '1');
+                  } catch (e) { }
+                  window.location.href = '/experiments';
+                }
+              }
+            });
+          });
+
+          var saveBtn = document.createElement('button');
+          saveBtn.type = 'button';
+          saveBtn.className = 'primary';
+          saveBtn.textContent = 'Lưu thí nghiệm';
+          saveBtn.addEventListener('click', function () {
+            if (typeof window.__nbSaveExperiment === 'function') {
+              window.__nbSaveExperiment();
+            }
+          });
+
+          actions.appendChild(link);
+          actions.appendChild(saveBtn);
+          host.appendChild(actions);
+        }
+
+        function ensureHeaderDecor() {
+          injectTHSLogo();
+          injectExperimentHeaderButtons();
+        }
+
+        setTimeout(ensureHeaderDecor, 600);
+        setTimeout(ensureHeaderDecor, 2000);
+        setTimeout(ensureHeaderDecor, 4000);
         new MutationObserver(function () {
-          if (!document.getElementById('ths-logo-inject')) injectTHSLogo();
+          if (!document.getElementById('ths-logo-inject') || !document.getElementById('nb-experiment-actions')) ensureHeaderDecor();
         }).observe(document.documentElement, { childList: true, subtree: true });
       })();
 

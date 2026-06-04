@@ -1,5 +1,6 @@
+import Head from 'next/head'
 import type { KeyboardEvent } from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type ExperimentRecord = {
   id: string
@@ -23,6 +24,9 @@ type ApiResponse<T> = { code: number; data: T; msg: string }
 type DeleteTarget = Pick<ExperimentRecord, 'id' | 'name'> | null
 
 const PAGE_SIZE = 24
+const THS_TITLE = 'THS - Phòng Thí Nghiệm Ảo'
+const THS_FAVICON = 'https://truonghocsoquocgia.vn/assets/logo/Logomark.svg'
+const THS_SPLASH_FLAG = 'ths-transition-splash'
 
 function SearchIcon() {
   return (
@@ -166,15 +170,55 @@ export default function ExperimentsPage() {
     }
   }
 
+  const didInitRef = useRef(false)
+
   useEffect(() => {
     loadReplace()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    didInitRef.current = true
   }, [])
+
+  useEffect(() => {
+    if (!didInitRef.current) return
+
+    const t = window.setTimeout(() => {
+      loadReplace()
+    }, 400)
+
+    return () => {
+      window.clearTimeout(t)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keyword])
 
   useEffect(() => {
     if (!deleteTarget) return
     cancelDeleteRef.current?.focus()
   }, [deleteTarget])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    let timer = 0
+    try {
+      const hasTransitionFlag = window.sessionStorage.getItem(THS_SPLASH_FLAG) === '1'
+      if (hasTransitionFlag) {
+        window.sessionStorage.removeItem(THS_SPLASH_FLAG)
+      }
+
+      timer = window.setTimeout(() => {
+        document.body.classList.add('ths-splash-inactive')
+      }, hasTransitionFlag ? 3400 : 2400)
+    } catch {
+      timer = window.setTimeout(() => {
+        document.body.classList.add('ths-splash-inactive')
+      }, 2400)
+    }
+
+    return () => {
+      if (timer) window.clearTimeout(timer)
+      document.body.classList.remove('ths-splash-inactive')
+    }
+  }, [])
 
   function closeDeleteModal() {
     setDeleteTarget(null)
@@ -209,12 +253,6 @@ export default function ExperimentsPage() {
     }
   }
 
-  const latest = useMemo(() => {
-    if (!list.length) return null
-    const latestItem = list.reduce((best, cur) => (new Date(cur.updateTime).getTime() > new Date(best.updateTime).getTime() ? cur : best), list[0])
-    return latestItem.updateTime
-  }, [list])
-
   async function handleDeleteConfirm() {
     if (!deleteTarget) return
     setDeleteLoading(true)
@@ -239,6 +277,12 @@ export default function ExperimentsPage() {
 
   return (
     <>
+      <Head>
+        <title>{THS_TITLE}</title>
+        <link rel="icon" href={THS_FAVICON} type="image/svg+xml" />
+        <link rel="shortcut icon" href={THS_FAVICON} type="image/svg+xml" />
+      </Head>
+
       <style jsx>{`
         :global(.icon) {
           display: block;
@@ -258,11 +302,184 @@ export default function ExperimentsPage() {
           height: 26px;
         }
 
+        :global(body:not(.ths-splash-inactive)) {
+          overflow: hidden;
+        }
+
         .page {
           min-height: 100vh;
           background: #f3f4f8;
           color: #0f172a;
           padding: 24px 16px 56px;
+        }
+
+        .ths-splash {
+          position: fixed;
+          inset: 0;
+          z-index: 300;
+          opacity: 1;
+          visibility: visible;
+          pointer-events: auto;
+          transition: opacity 360ms ease, visibility 360ms ease;
+        }
+
+        :global(body.ths-splash-inactive) .ths-splash {
+          opacity: 0;
+          visibility: hidden;
+          pointer-events: none;
+        }
+
+        .ths-splash :global(.spinComp___WmjpF) {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 999999;
+        }
+
+        .ths-splash :global(.bgComp___CDQ82) {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          pointer-events: auto;
+          background: #080c16;
+        }
+
+        .ths-splash :global(.spin___Ilah7) {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+        }
+
+        .ths-splash :global(.ant-spin) {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+          color: #3555d3;
+          font-size: 14px;
+          font-variant: tabular-nums;
+          line-height: 1.5715;
+          list-style: none;
+          font-feature-settings: 'tnum';
+          position: absolute;
+          display: none;
+          color: rgba(0, 0, 0, 0.85);
+          text-align: center;
+          vertical-align: middle;
+          opacity: 0;
+          transition: transform 0.3s cubic-bezier(0.78, 0.14, 0.15, 0.86);
+        }
+
+        .ths-splash :global(.ant-spin-spinning) {
+          position: static;
+          display: inline-block;
+          opacity: 1;
+        }
+
+        .ths-splash :global(.ant-spin-dot) {
+          position: relative;
+          display: inline-block;
+          font-size: 20px;
+          width: 1em;
+          height: 1em;
+        }
+
+        .ths-splash :global(.ant-spin-dot-spin) {
+          transform: rotate(45deg);
+          animation: antRotate 1.2s infinite linear;
+        }
+
+        .ths-splash :global(.ant-spin-dot-item) {
+          position: absolute;
+          display: block;
+          width: 9px;
+          height: 9px;
+          background-color: #3555d3;
+          border-radius: 100%;
+          transform: scale(0.75);
+          transform-origin: 50% 50%;
+          opacity: 0.3;
+          animation: antSpinMove 1s infinite linear alternate;
+        }
+
+        .ths-splash :global(.ths-load-brand) {
+          position: absolute;
+          top: 72%;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+          pointer-events: none;
+          text-align: center;
+          z-index: 2147483647;
+        }
+
+        .ths-splash :global(.ths-load-brand img) {
+          height: 44px;
+          width: auto;
+          display: block;
+        }
+
+        .ths-splash :global(.ths-logo-text) {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+        }
+
+        .ths-splash :global(.ths-logo-text span:first-child) {
+          font-size: 13px;
+          font-weight: 700;
+          color: #fff;
+          letter-spacing: 0.4px;
+          font-family: 'Inter', 'Be Vietnam Pro', sans-serif;
+        }
+
+        .ths-splash :global(.ths-logo-text span:last-child) {
+          font-size: 9.5px;
+          color: rgba(255, 255, 255, 0.5);
+          letter-spacing: 1.2px;
+          font-family: 'Inter', 'Be Vietnam Pro', sans-serif;
+        }
+
+        .ths-splash :global(.ant-spin-dot-item:nth-child(1)) {
+          top: 0;
+          left: 0;
+        }
+
+        .ths-splash :global(.ant-spin-dot-item:nth-child(2)) {
+          top: 0;
+          right: 0;
+          animation-delay: 0.4s;
+        }
+
+        .ths-splash :global(.ant-spin-dot-item:nth-child(3)) {
+          right: 0;
+          bottom: 0;
+          animation-delay: 0.8s;
+        }
+
+        .ths-splash :global(.ant-spin-dot-item:nth-child(4)) {
+          bottom: 0;
+          left: 0;
+          animation-delay: 1.2s;
+        }
+
+        @keyframes antSpinMove {
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes antRotate {
+          to {
+            transform: rotate(405deg);
+          }
         }
 
         .shell {
@@ -344,6 +561,9 @@ export default function ExperimentsPage() {
           border-radius: 16px;
           border: 1px solid #d6dbe5;
           background: #fff;
+          color: #0f172a;
+          caret-color: #0f172a;
+          -webkit-text-fill-color: #0f172a;
           padding: 0 16px 0 48px;
           font-size: 14px;
           font-weight: 500;
@@ -351,6 +571,11 @@ export default function ExperimentsPage() {
           outline: none;
           box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
           transition: border-color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .search input::placeholder {
+          color: #94a3b8;
+          -webkit-text-fill-color: #94a3b8;
         }
 
         .search input:focus {
@@ -673,6 +898,29 @@ export default function ExperimentsPage() {
         }
       `}</style>
 
+      <div className="ths-splash" aria-hidden="true">
+        <div className="spinComp___WmjpF">
+          <div className="bgComp___CDQ82" />
+          <div className="spin___Ilah7">
+            <span className="ant-spin ant-spin-spinning">
+              <span className="ant-spin-dot ant-spin-dot-spin">
+                <i className="ant-spin-dot-item" />
+                <i className="ant-spin-dot-item" />
+                <i className="ant-spin-dot-item" />
+                <i className="ant-spin-dot-item" />
+              </span>
+            </span>
+          </div>
+          <div className="ths-load-brand">
+            <img src="https://truonghocsoquocgia.vn/assets/logo/Logomark.svg" alt="THS Logo" />
+            <div className="ths-logo-text">
+              <span>TRƯỜNG HỌC SỐ</span>
+              <span>PHÒNG THÍ NGHIỆM ẢO</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="page">
         <div className="shell">
           <div className="head">
@@ -730,7 +978,7 @@ export default function ExperimentsPage() {
             ) : list.length === 0 ? (
               <div className="empty">
                 <h3>Chưa có thí nghiệm</h3>
-                <p>Tạo thí nghiệm trong lab rồi quay lại màn này để thấy thumbnail và tên bài.</p>
+                <p>Không tìm thấy dữ liệu về thí nghiệm của bạn.</p>
               </div>
             ) : (
               <div className="grid">

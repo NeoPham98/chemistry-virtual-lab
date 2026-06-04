@@ -710,11 +710,11 @@ export default function ExperimentsPage() {
             </div>
           </div>
 
-          <div className="meta-line">
+          {/* <div className="meta-line">
             <span>{list.length} / {total || 0}</span>
             <span>•</span>
             <span>Cập nhật: {latest ? formatTinyDate(latest) : '—'}</span>
-          </div>
+          </div> */}
 
           {error && (
             <div className="notice" role="alert" aria-live="polite">

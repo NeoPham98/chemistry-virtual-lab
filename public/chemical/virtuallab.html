@@ -127,33 +127,155 @@
       }
     }
 
-    function captureExperimentThumbnail() {
+    function getLabMain() {
+      return window.__main || window.chemicalMain || null;
+    }
+
+    function getLabCanvas() {
+      var main = getLabMain();
+      if (main && main.canvas && main.canvas.width > 0 && main.canvas.height > 0) {
+        return main.canvas;
+      }
+
+      var viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+      var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
       var candidates = Array.prototype.slice.call(document.querySelectorAll('canvas'));
       var source = candidates
-        .filter(function (item) { return item.width > 0 && item.height > 0; })
-        .sort(function (a, b) { return (b.width * b.height) - (a.width * a.height); })[0];
+        .map(function (item) {
+          if (!item || item.width <= 0 || item.height <= 0) {
+            return null;
+          }
 
-      if (!source || typeof source.toDataURL !== 'function') {
+          var style = window.getComputedStyle(item);
+          if (!style || style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) {
+            return null;
+          }
+
+          var rect = item.getBoundingClientRect();
+          var visibleWidth = Math.max(0, Math.min(rect.right, viewportWidth) - Math.max(rect.left, 0));
+          var visibleHeight = Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0));
+          var visibleArea = visibleWidth * visibleHeight;
+          if (visibleArea <= 0) {
+            return null;
+          }
+
+          return { item: item, visibleArea: visibleArea, pixelArea: item.width * item.height };
+        })
+        .filter(function (entry) { return !!entry; })
+        .sort(function (a, b) {
+          return b.visibleArea - a.visibleArea || b.pixelArea - a.pixelArea;
+        })[0];
+
+      return source ? source.item : null;
+    }
+
+    function renderThumbnailWithBackground(source, width, height) {
+      try {
+        var thumbnailCanvas = document.createElement('canvas');
+        thumbnailCanvas.width = width;
+        thumbnailCanvas.height = height;
+        var context = thumbnailCanvas.getContext('2d');
+        if (!context) {
+          return '';
+        }
+
+        context.fillStyle = '#000000';
+        context.fillRect(0, 0, width, height);
+        context.drawImage(source, 0, 0, width, height);
+        return thumbnailCanvas.toDataURL('image/jpeg', 0.92);
+      } catch (error) {
+        return '';
+      }
+    }
+
+    function captureCanvasThumbnailFallback() {
+      var canvas = getLabCanvas();
+      if (!canvas || typeof canvas.toDataURL !== 'function') {
         return '';
       }
 
       try {
         var maxWidth = 320;
-        var ratio = source.height / source.width;
-        var targetWidth = Math.min(maxWidth, source.width);
+        var ratio = canvas.height / canvas.width;
+        var targetWidth = Math.min(maxWidth, canvas.width);
         var targetHeight = Math.max(1, Math.round(targetWidth * ratio));
-        var thumbnailCanvas = document.createElement('canvas');
-        thumbnailCanvas.width = targetWidth;
-        thumbnailCanvas.height = targetHeight;
-        var context = thumbnailCanvas.getContext('2d');
-        if (!context) {
-          return source.toDataURL('image/png');
+        var rendered = renderThumbnailWithBackground(canvas, targetWidth, targetHeight);
+        if (rendered) {
+          return rendered;
         }
-        context.drawImage(source, 0, 0, targetWidth, targetHeight);
-        return thumbnailCanvas.toDataURL('image/jpeg', 0.82);
+
+        return canvas.toDataURL('image/jpeg', 0.92);
       } catch (error) {
         return '';
       }
+    }
+
+    async function normalizeThumbnailBackground(dataUrl) {
+      if (typeof dataUrl !== 'string' || dataUrl.indexOf('data:image/') !== 0) {
+        return '';
+      }
+
+      return await new Promise(function (resolve) {
+        var image = new Image();
+        image.onload = function () {
+          resolve(renderThumbnailWithBackground(image, image.naturalWidth || image.width, image.naturalHeight || image.height) || dataUrl);
+        };
+        image.onerror = function () {
+          resolve(dataUrl);
+        };
+        image.src = dataUrl;
+      });
+    }
+
+    function getRuntimeScreenshotApi() {
+      var candidates = [
+        window.chemicalMain,
+        window.__main,
+        window.chemical,
+        window.chemicalLab,
+        window.lab,
+        window.nbLab,
+        window.NBLab,
+        window.__nbLab,
+        window.__sdk,
+        window.sdk,
+        window.__appSdk,
+      ];
+
+      for (var i = 0; i < candidates.length; i += 1) {
+        var candidate = candidates[i];
+        if (candidate && typeof candidate.takeScreenShot === 'function') {
+          return candidate;
+        }
+      }
+
+      return null;
+    }
+
+    async function captureExperimentThumbnail() {
+      var main = getLabMain();
+      if (main && typeof main.freshRender === 'function') {
+        try {
+          main.freshRender();
+        } catch (error) { }
+      }
+
+      var screenshotApi = getRuntimeScreenshotApi();
+      if (screenshotApi && typeof screenshotApi.takeScreenShot === 'function') {
+        try {
+          var screenshot = await screenshotApi.takeScreenShot({ type: 'jpeg', quality: 0.92, transparent: false });
+          if (typeof screenshot === 'string' && screenshot.indexOf('data:image/') === 0) {
+            var normalized = await normalizeThumbnailBackground(screenshot);
+            return normalized || screenshot;
+          }
+        } catch (error) { }
+      }
+
+      return captureCanvasThumbnailFallback();
+    }
+
+    async function getExperimentThumbnail() {
+      return await captureExperimentThumbnail();
     }
 
     window.__nbSaveExperiment = async function () {
@@ -162,7 +284,10 @@
         return;
       }
 
+      state.saveInFlight = true;
+
       if (!window.chemicalMain || typeof window.chemicalMain.execute !== 'function' || !window.NBCommand || !window.NBCommand.GET_DATA) {
+        state.saveInFlight = false;
         showNbPopup({ title: 'Không thể lưu', message: 'Lab chưa sẵn sàng để lưu.', tone: 'danger' });
         return;
       }
@@ -231,7 +356,6 @@
           resolve(null);
         });
 
-
         confirmBtn.addEventListener('click', function () {
           var n = (nameInput.value || '').trim();
           if (!n) return;
@@ -240,9 +364,7 @@
           resolve({ name: n, description: d });
         });
 
-        saveModalBackdrop.addEventListener('click', function (e) { if (e.target === saveModalBackdrop) { closeModal(); resolve(null); } });
         saveModal.addEventListener('click', function (e) { e.stopPropagation(); });
-        saveModalBackdrop.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeModal(); resolve(null); } });
       });
 
       form.appendChild(nameLabel);
@@ -261,7 +383,10 @@
       window.setTimeout(function () { try { nameInput.focus(); } catch (e) { } }, 0);
 
       var modalResult = await modalPromise;
-      if (!modalResult) return;
+      if (!modalResult) {
+        state.saveInFlight = false;
+        return;
+      }
       var name = modalResult.name;
       var description = modalResult.description;
       var content = '';
@@ -269,19 +394,19 @@
       try {
         content = window.chemicalMain.execute(window.NBCommand.GET_DATA);
       } catch (error) {
+        state.saveInFlight = false;
         showNbPopup({ title: 'Không thể lưu', message: 'Không lấy được dữ liệu thí nghiệm để lưu.', tone: 'danger' });
         return;
       }
 
       if (!content) {
+        state.saveInFlight = false;
         showNbPopup({ title: 'Không thể lưu', message: 'Dữ liệu thí nghiệm đang rỗng.', tone: 'danger' });
         return;
       }
 
-      state.saveInFlight = true;
-
       try {
-        var thumbnailUrl = captureExperimentThumbnail();
+        var thumbnailUrl = await getExperimentThumbnail();
         var payload = {
           name: name,
           description: description,

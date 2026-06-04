@@ -72,6 +72,57 @@ function getExperimentPath(slug: string[]) {
     return '/' + slug.slice(1).join('/')
 }
 
+function normalizeExperimentContent(value: unknown) {
+    if (typeof value === 'string') {
+        return { content: value, error: null }
+    }
+
+    if (value == null) {
+        return { content: '', error: null }
+    }
+
+    try {
+        return { content: JSON.stringify(value), error: null }
+    } catch {
+        return { content: '', error: 'Experiment content is not serializable' }
+    }
+}
+
+function getErrorMessage(error: unknown) {
+    if (error instanceof Error) {
+        return error.message
+    }
+
+    if (typeof error === 'string') {
+        return error
+    }
+
+    if (error && typeof error === 'object') {
+        const message = Reflect.get(error, 'message')
+        if (typeof message === 'string' && message) {
+            return message
+        }
+
+        const details = Reflect.get(error, 'details')
+        if (typeof details === 'string' && details) {
+            return details
+        }
+
+        const hint = Reflect.get(error, 'hint')
+        if (typeof hint === 'string' && hint) {
+            return hint
+        }
+
+        try {
+            return JSON.stringify(error)
+        } catch {
+            return 'Unknown error'
+        }
+    }
+
+    return 'Unknown error'
+}
+
 async function handleExperimentRoute(req: NextApiRequest, res: NextApiResponse, slug: string[]) {
     if (!isSupabaseReady()) {
         res.status(200).json(MOCK_EMPTY_LIST)
@@ -111,7 +162,11 @@ async function handleExperimentRoute(req: NextApiRequest, res: NextApiResponse, 
 
         if (req.method === 'POST' && experimentPath === '/create') {
             const name = typeof body.name === 'string' ? body.name.trim() : ''
-            const content = typeof body.content === 'string' ? body.content : ''
+            const { content, error } = normalizeExperimentContent(body.content)
+            if (error) {
+                res.status(400).json({ code: 400, data: null, msg: error })
+                return
+            }
             if (!name || !content) {
                 res.status(400).json({ code: 400, data: null, msg: 'Missing required fields' })
                 return
@@ -131,7 +186,11 @@ async function handleExperimentRoute(req: NextApiRequest, res: NextApiResponse, 
         if (req.method === 'POST' && experimentPath === '/update') {
             const id = typeof body.id === 'string' ? body.id : ''
             const name = typeof body.name === 'string' ? body.name.trim() : ''
-            const content = typeof body.content === 'string' ? body.content : ''
+            const { content, error } = normalizeExperimentContent(body.content)
+            if (error) {
+                res.status(400).json({ code: 400, data: null, msg: error })
+                return
+            }
             if (!id || !name || !content) {
                 res.status(400).json({ code: 400, data: null, msg: 'Missing required fields' })
                 return
@@ -163,8 +222,7 @@ async function handleExperimentRoute(req: NextApiRequest, res: NextApiResponse, 
 
         res.status(404).json({ code: 404, data: null, msg: 'Experiment route not found' })
     } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error'
-        res.status(500).json({ code: 500, data: null, msg: message })
+        res.status(500).json({ code: 500, data: null, msg: getErrorMessage(error) })
     }
 }
 

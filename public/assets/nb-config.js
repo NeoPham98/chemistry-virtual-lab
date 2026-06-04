@@ -2,14 +2,16 @@
 // nb-config.js - PATCHED FOR LOCAL USE
 // All API URLs redirected to localhost:8080/api/mock/
 // =====================================================
-var LOCAL_MOCK = 'http://localhost:8080/api/mock';
+var host = (typeof window !== 'undefined' && window.location) ? window.location.origin : 'http://localhost:8080';
+var hostname = (typeof window !== 'undefined' && window.location) ? window.location.hostname : 'localhost';
+var LOCAL_MOCK = host + '/api/mock';
 
 window.__nb_domain = {
     userLoginApi: LOCAL_MOCK + '/login/username',
     passportUrl: LOCAL_MOCK,
-    baseUrl: 'http://localhost:8080',
+    baseUrl: host,
     accountUrl: LOCAL_MOCK,
-    cookieDomain: 'localhost',
+    cookieDomain: hostname,
 };
 
 var insert_config = {
@@ -30,7 +32,7 @@ var insert_config = {
         sharePhy: LOCAL_MOCK,
         shareChem: LOCAL_MOCK,
         serverTimeHost: LOCAL_MOCK,
-        originUrl: 'http://localhost:8080',
+        originUrl: host,
         nbHelp: LOCAL_MOCK,
         perfectUrl: LOCAL_MOCK,
         wechatAppletUrl: LOCAL_MOCK,

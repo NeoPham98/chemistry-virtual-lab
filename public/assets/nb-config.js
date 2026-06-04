@@ -1,6 +1,6 @@
 // =====================================================
-// nb-config.js - PATCHED FOR LOCAL USE
-// All API URLs redirected to localhost:8080/api/mock/
+// nb-config.js - PATCHED FOR LOCAL AND PRODUCTION USE
+// All API URLs redirected dynamically based on host
 // =====================================================
 var host = (typeof window !== 'undefined' && window.location) ? window.location.origin : 'http://localhost:8080';
 var hostname = (typeof window !== 'undefined' && window.location) ? window.location.hostname : 'localhost';

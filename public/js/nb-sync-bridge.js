@@ -1,10 +1,11 @@
 /**
- * NB Sync Bridge v12.1 — SMART HYBRID + STANDALONE (WebRTC + BroadcastChannel)
+ * NB Sync Bridge v12.2 — SMART HYBRID + STANDALONE (WebRTC + BroadcastChannel)
  * 
  * Modes:
  * 1. SDK Mode: Bridge inside iframe, SDK parent manages roles & relay via postMessage
  * 2. Standalone Mode: URL params ?syncRoom=X&syncRole=presenter|viewer
  *    → Auto-connects via BroadcastChannel (same-device) + PeerJS WebRTC (cross-device)
+ *    → Disabled when transport=postmessage so smart-class can use SDK mode over /ws
  */
 (function () {
   'use strict';
@@ -12,7 +13,7 @@
   if (window.__nbSyncBridgeLoaded) return;
   window.__nbSyncBridgeLoaded = true;
 
-  var BRIDGE_VERSION = '12.1.0';
+  var BRIDGE_VERSION = '12.2.0';
   var MSG_PREFIX = 'NB_SYNC';
   var MAX_INIT_WAIT = 30000;
 
@@ -41,12 +42,14 @@
 
   // Standalone mode vars
   var _urlParams = new URLSearchParams(window.location.search);
+  var _transport = _urlParams.get('transport');
   var _syncRoom = _urlParams.get('syncRoom');
   var _syncRole = _urlParams.get('syncRole');
-  var _standaloneMode = !!_syncRoom;
+  var _standaloneMode = !!_syncRoom && _transport !== 'postmessage';
   var _bc = null;
   var _peer = null;
   var _peerConns = [];
+  var _positionSyncTimer = null;
 
   // ═══════════════════════════════════════════════════════
   // LOGGING
@@ -68,6 +71,7 @@
   // SEND TO PARENT (overridden in standalone mode)
   // ═══════════════════════════════════════════════════════
   var _sendToParentBase = function (action, payload) {
+    recordCommandHistory(action, payload);
     if (window.parent === window) return;
     try {
       window.parent.postMessage({
@@ -541,19 +545,48 @@
   // Command history for late-joining viewers
   var _commandHistory = [];
 
+  function recordCommandHistory(action, payload) {
+    if (action !== 'EXECUTE_CMD' && action !== 'DISPATCH_ACTION') return;
+    // Skip commands with PIXI object references — these depend on transient scene paths and are
+    // followed by POSITION_SYNC bursts instead of being safe to replay for late joiners.
+    var hasPixiRef = false;
+    if (payload && payload.args) {
+      for (var h = 0; h < payload.args.length; h++) {
+        if (payload.args[h] && payload.args[h].__pixiRef) { hasPixiRef = true; break; }
+      }
+    }
+    if (!hasPixiRef) {
+      _commandHistory.push({
+        type: MSG_PREFIX,
+        action: action,
+        payload: payload || {},
+        timestamp: Date.now(),
+        userId: _userId,
+        version: BRIDGE_VERSION
+      });
+    }
+  }
+
+  function startPositionSyncLoop() {
+    if (_positionSyncTimer) return;
+    _positionSyncTimer = setInterval(function () {
+      if (_isPresenter) sendPositionSync();
+    }, 1000);
+  }
+
+  function sendStateSnapshot() {
+    if (!_isPresenter) return;
+    if (_commandHistory.length > 0) {
+      _sendToParentBase('STATE_HISTORY', _commandHistory);
+    }
+    [100, 500, 1200, 2500].forEach(function (delay) {
+      setTimeout(function () { sendPositionSync(); }, delay);
+    });
+  }
+
   // Broadcast to BC + WebRTC
   function broadcastEvent(action, payload) {
     var msg = { type: MSG_PREFIX, action: action, payload: payload || {}, timestamp: Date.now(), userId: _userId };
-    // Record non-canvas commands for late joiners (skip __pixiRef interactions)
-    if (action === 'EXECUTE_CMD' || action === 'DISPATCH_ACTION') {
-      var hasPixiRef = false;
-      if (payload && payload.args) {
-        for (var h = 0; h < payload.args.length; h++) {
-          if (payload.args[h] && payload.args[h].__pixiRef) { hasPixiRef = true; break; }
-        }
-      }
-      if (!hasPixiRef) _commandHistory.push(msg);
-    }
     if (_bc) { try { _bc.postMessage(msg); } catch (e) {} }
     for (var i = 0; i < _peerConns.length; i++) {
       try { if (_peerConns[i].open) _peerConns[i].send(JSON.stringify(msg)); } catch (e) {}
@@ -645,11 +678,7 @@
     };
     log('✓ Presenter mode — broadcasting enabled');
     // Periodic position sync every 1s
-    setInterval(function () {
-      if (_isPresenter) {
-        sendPositionSync();
-      }
-    }, 1000);
+    startPositionSyncLoop();
   }
 
   // Block all user interactions on viewer (student)
@@ -730,7 +759,17 @@
         _isPresenter = msg.payload.role === 'presenter';
         _userId = msg.payload.userId || _userId;
         log('Role:', _isPresenter ? 'PRESENTER' : 'VIEWER');
-        if (_isPresenter) startCanvasCapture();
+        if (_isPresenter) {
+          startCanvasCapture();
+          startPositionSyncLoop();
+          sendStateSnapshot();
+        } else {
+          if (_positionSyncTimer) {
+            clearInterval(_positionSyncTimer);
+            _positionSyncTimer = null;
+          }
+          lockViewerUI();
+        }
         break;
       case 'CANVAS_EVENT':
         if (!_isPresenter) { _isSyncing = true; replayCanvasEvent(msg.payload); _isSyncing = false; }
@@ -740,6 +779,15 @@
         break;
       case 'DISPATCH_ACTION':
         if (!_isPresenter) replayDispatch(msg.payload);
+        break;
+      case 'POSITION_SYNC':
+        if (!_isPresenter) applyPositionSync(msg.payload);
+        break;
+      case 'STATE_HISTORY':
+        if (!_isPresenter) handleSyncMessage(msg);
+        break;
+      case 'REQUEST_STATE':
+        if (_isPresenter) sendStateSnapshot();
         break;
     }
   });

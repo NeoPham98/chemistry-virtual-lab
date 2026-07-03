@@ -24,6 +24,17 @@ const nextConfig = {
                     { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
                 ],
             },
+            {
+                // [SAFARI IFRAME FIX] Cross-origin embedding headers so the lab loads inside
+                // smart-class's cross-origin iframe. Safari (ITP / cache partitioning) otherwise
+                // aborts subresource/chunk loads without CORP → ChunkLoadError. Chrome is lenient.
+                source: '/:path*',
+                headers: [
+                    { key: 'Access-Control-Allow-Origin', value: '*' },
+                    { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
+                    { key: 'Timing-Allow-Origin', value: '*' },
+                ],
+            },
         ]
     },
 

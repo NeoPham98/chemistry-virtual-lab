@@ -4,6 +4,26 @@
 <head>
   <base href="/" />
 
+  <script>
+    /* [SAFARI IFRAME FIX] Recover from webpack ChunkLoadError. Safari aborts async chunks in a
+       cross-origin iframe (ITP / cache partitioning) -> ChunkLoadError. Reload once per session;
+       auto-reset the guard after a clean load so a later navigation can still recover. */
+    (function () {
+      function isChunkErr(m) {
+        return /ChunkLoadError|Loading chunk\s|Importing a module script failed|error loading dynamically imported module/i.test(m || "");
+      }
+      function recover(m) {
+        if (!isChunkErr(m)) return;
+        try { if (sessionStorage.getItem("__nbChunkReloaded")) return; sessionStorage.setItem("__nbChunkReloaded", "1"); } catch (e) {}
+        try { if (window.caches && caches.keys) caches.keys().then(function (ks) { ks.forEach(function (n) { caches.delete(n); }); }); } catch (e) {}
+        location.reload();
+      }
+      window.addEventListener("error", function (e) { recover(e && e.message); });
+      window.addEventListener("unhandledrejection", function (e) { var r = e && e.reason; recover(r && (r.message || String(r))); });
+      window.addEventListener("load", function () { setTimeout(function () { try { sessionStorage.removeItem("__nbChunkReloaded"); } catch (e) {} }, 5000); });
+    })();
+  </script>
+
   <meta charset="UTF-8" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

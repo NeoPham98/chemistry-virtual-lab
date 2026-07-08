@@ -1,5 +1,5 @@
 /**
- * NB Sync Bridge v12.2 — SMART HYBRID + STANDALONE (WebRTC + BroadcastChannel)
+ * NB Sync Bridge v12.3 — SMART HYBRID + STANDALONE (WebRTC + BroadcastChannel)
  * 
  * Modes:
  * 1. SDK Mode: Bridge inside iframe, SDK parent manages roles & relay via postMessage
@@ -13,7 +13,7 @@
   if (window.__nbSyncBridgeLoaded) return;
   window.__nbSyncBridgeLoaded = true;
 
-  var BRIDGE_VERSION = '12.2.0';
+  var BRIDGE_VERSION = '12.3.0';
   var MSG_PREFIX = 'NB_SYNC';
   var MAX_INIT_WAIT = 30000;
 
@@ -91,8 +91,13 @@
   // LAYER 1: CANVAS POINTER EVENTS
   // ═══════════════════════════════════════════════════════
   function startCanvasCapture() {
+    // Idempotent: tryInit() and the SET_ROLE presenter handler both call this; without a guard
+    // the presenter binds duplicate document-level pointer listeners → every CANVAS_EVENT (and
+    // its /ws relay) fires twice, causing jittery double-replay on viewers.
+    if (window.__nbCanvasCaptureStarted) return true;
     _canvasEl = document.querySelector('canvas');
     if (!_canvasEl) { log('No canvas found!'); return false; }
+    window.__nbCanvasCaptureStarted = true;
 
     var dragging = false;
     var canvasRect = null;
@@ -271,35 +276,11 @@
         log('⚡', cmdName);
         setTimeout(function () { sendPositionSync(); }, 100);
       }
-      // Relay one-shot interaction commands (non-whitelisted, fire ≤3x in 2s)
-      if (_isPresenter && !_isSyncing && !RELAY_COMMANDS[cmd] && cmd !== CMD_DELETE) {
-        if (!window.__cmdFreq) window.__cmdFreq = {};
-        if (!window.__cmdSkip) window.__cmdSkip = {};
-        var now = Date.now();
-        if (!window.__cmdSkip[cmd]) {
-          if (!window.__cmdFreq[cmd]) window.__cmdFreq[cmd] = [];
-          window.__cmdFreq[cmd].push(now);
-          window.__cmdFreq[cmd] = window.__cmdFreq[cmd].filter(function(t) { return now - t < 2000; });
-          if (window.__cmdFreq[cmd].length > 3) {
-            window.__cmdSkip[cmd] = true;
-            log('⏭ Skip tick:', cmd.substr(0, 8) + '...');
-          } else {
-            // Smart serialize with PIXI path refs
-            var smartArgs = [cmd];
-            for (var i = 1; i < args.length; i++) {
-              var a = args[i];
-              if (a && typeof a === 'object' && typeof a.x === 'number' && a.parent) {
-                var eqPath = findChildPath(cm, a);
-                smartArgs.push(eqPath ? { __pixiRef: true, path: eqPath } : null);
-              } else {
-                try { smartArgs.push(JSON.parse(JSON.stringify(a))); } catch(e3) { smartArgs.push(null); }
-              }
-            }
-            sendToParent('EXECUTE_CMD', { cmdName: cmd, args: smartArgs });
-            log('⚡🔥', cmd.substr(0, 8) + '...');
-          }
-        }
-      }
+      // [DISABLED v12.3] Relaying NON-whitelisted commands serialized plain-object args that the
+      // viewer's engine then treats as live PIXI display objects → "e.on is not a function" on
+      // replay (spammed the console + broke chemical sync). Whitelisted commands (ADD/CREATE/
+      // DELETE equipment) + DVA actions + periodic POSITION_SYNC reproduce scene state without
+      // this speculative path. Re-enable only with a robust per-arg PIXI guard on the viewer.
       return result;
     };
     log('✓ Layer 2: execute() hooked');
@@ -398,9 +379,15 @@
       }
       data.push(entry);
     }
-    log('📤 Sync:', debugStr);
+    if (window.__nbSyncDebug) log('📤 Sync:', debugStr);
+    // Only emit when the scene actually changed. The 1s heartbeat otherwise sends an identical
+    // POSITION_SYNC every tick → constant /ws traffic + fan-out to every subscriber while idle.
     if (data.length > 0) {
-      sendToParent('POSITION_SYNC', data);
+      var _posJson = JSON.stringify(data);
+      if (_posJson !== window.__nbLastPosSync) {
+        window.__nbLastPosSync = _posJson;
+        sendToParent('POSITION_SYNC', data);
+      }
     }
   }
 
@@ -416,7 +403,7 @@
       if (!node || typeof node.x !== 'number') continue;
       // Level 0: root child
       if (Math.abs(node.x - d.x) > 0.5 || Math.abs(node.y - d.y) > 0.5) {
-        log('📍 [' + d.i + ']: ' + Math.round(node.x) + ',' + Math.round(node.y) + ' → ' + Math.round(d.x) + ',' + Math.round(d.y));
+        if (window.__nbSyncDebug) log('📍 [' + d.i + ']: ' + Math.round(node.x) + ',' + Math.round(node.y) + ' → ' + Math.round(d.x) + ',' + Math.round(d.y));
       }
       node.x = d.x; node.y = d.y;
       if (node.scale && d.sx != null) { node.scale.x = d.sx; node.scale.y = d.sy; }
@@ -427,7 +414,7 @@
           var cn = node.children[cd.i];
           if (!cn || typeof cn.x !== 'number') continue;
           if (Math.abs(cn.x - cd.x) > 0.5 || Math.abs(cn.y - cd.y) > 0.5) {
-            log('📍 [' + d.i + '.' + cd.i + ']: ' + Math.round(cn.x) + ',' + Math.round(cn.y) + ' → ' + Math.round(cd.x) + ',' + Math.round(cd.y));
+            if (window.__nbSyncDebug) log('📍 [' + d.i + '.' + cd.i + ']: ' + Math.round(cn.x) + ',' + Math.round(cn.y) + ' → ' + Math.round(cd.x) + ',' + Math.round(cd.y));
           }
           cn.x = cd.x; cn.y = cd.y;
           if (cn.scale && cd.sx != null) { cn.scale.x = cd.sx; cn.scale.y = cd.sy; }
@@ -522,7 +509,7 @@
         }
         break;
       case 'POSITION_SYNC':
-        log('📍 Received POSITION_SYNC, items:', msg.payload ? msg.payload.length : 0);
+        if (window.__nbSyncDebug) log('📍 Received POSITION_SYNC, items:', msg.payload ? msg.payload.length : 0);
         applyPositionSync(msg.payload);
         break;
       case 'STATE_HISTORY':

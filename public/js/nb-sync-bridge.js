@@ -65,6 +65,12 @@
   var _lastAppliedHash = '';   // viewer: skip RESTORE when already at presenter's state
   var SNAP_DEBOUNCE_MS = 500;
   var SNAP_HEARTBEAT_TICKS = 3; // every 3s (3 × 1s position ticks)
+  // Viewer = snapshot-authoritative: ignore the event-replay layers (CANVAS_EVENT / EXECUTE_CMD /
+  // DISPATCH_ACTION). Those replays add equipment/state a beat before the next STATE_SNAPSHOT also
+  // carries it → transient DUPLICATE equipment + extra work (lag). The viewer instead rebuilds only
+  // from STATE_SNAPSHOT (full setData/RESTORE = self-dedupes) plus POSITION_SYNC (smooth drag).
+  // Trade-off (accepted — "đúng tuyệt đối"): adds/deletes appear ~1 snapshot debounce later.
+  var VIEWER_SNAPSHOT_ONLY = true;
 
   // ═══════════════════════════════════════════════════════
   // LOGGING
@@ -192,6 +198,7 @@
   }
 
   function replayCanvasEvent(p) {
+    if (VIEWER_SNAPSHOT_ONLY) return; // viewer follows STATE_SNAPSHOT, not pointer replay
     if (!p || !p.eventType) return;
     var canvas = _canvasEl || document.querySelector('canvas');
     if (!canvas) return;
@@ -332,6 +339,7 @@
   }
 
   function replayExecute(payload) {
+    if (VIEWER_SNAPSHOT_ONLY) return; // viewer follows STATE_SNAPSHOT, not command replay
     if (!payload) return;
     var cm = findMainContainer();
     if (!cm || !_origExecute) return;
@@ -573,6 +581,7 @@
     return true;
   }
   function replayDispatch(actionData) {
+    if (VIEWER_SNAPSHOT_ONLY) return; // viewer follows STATE_SNAPSHOT, not dva-action replay
     if (!actionData || !actionData.type) return;
     var store = findDvaStore();
     if (!store || !_origDispatch) return;

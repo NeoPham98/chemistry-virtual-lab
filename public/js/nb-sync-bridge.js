@@ -1,10 +1,16 @@
 /**
- * NB Sync Bridge v12.1 — SMART HYBRID + STANDALONE (WebRTC + BroadcastChannel)
- * 
+ * NB Sync Bridge v13.0 — SNAPSHOT-AUTHORITATIVE + SMART HYBRID + STANDALONE
+ * Works for both Physics and Chemistry labs (findMainContainer auto-detects the engine).
+ *
  * Modes:
  * 1. SDK Mode: Bridge inside iframe, SDK parent manages roles & relay via postMessage
  * 2. Standalone Mode: URL params ?syncRoom=X&syncRole=presenter|viewer
  *    → Auto-connects via BroadcastChannel (same-device) + PeerJS WebRTC (cross-device)
+ *
+ * v13: adds a STATE_SNAPSHOT layer — the presenter's full engine state
+ * (NBCommand.GET_DATA) is the single source of truth. Viewers RESTORE_DATA whenever the
+ * presenter's state hash changes (monotonic seq), so any drift left by the event-replay
+ * layers (which remain, for low-latency smoothness) self-heals within one heartbeat.
  */
 (function () {
   'use strict';
@@ -12,7 +18,7 @@
   if (window.__nbSyncBridgeLoaded) return;
   window.__nbSyncBridgeLoaded = true;
 
-  var BRIDGE_VERSION = '12.1.0';
+  var BRIDGE_VERSION = '13.0.0';
   var MSG_PREFIX = 'NB_SYNC';
   var MAX_INIT_WAIT = 30000;
 
@@ -24,9 +30,9 @@
   };
   var CMD_DELETE = '459e9a120494e97d1f7f9925e349502e';
 
-  // DVA actions to relay
-  var RELAY_DVA = ['schemModel/', 'formModel/', 'undoModel/', 'sensor', 'equipmentLibrary', 'experiment'];
-  var SKIP_DVA = ['@@', 'dva/', 'loading/', 'routing/', 'redux-undo', 'EFFECT_'];
+  // DVA actions to relay (union of the chemistry + physics model namespaces)
+  var RELAY_DVA = ['schemModel/', 'formModel/', 'undoModel/', 'phyModel/', 'sensor', 'equipmentLibrary', 'experiment', 'circuitModel/', 'opticsModel/'];
+  var SKIP_DVA = ['@@', 'dva/', 'loading/', 'routing/', 'redux-undo', 'EFFECT_', 'spinModel/'];
 
   var _isPresenter = false;
   var _isSyncing = false;
@@ -41,12 +47,24 @@
 
   // Standalone mode vars
   var _urlParams = new URLSearchParams(window.location.search);
+  var _transport = _urlParams.get('transport');
   var _syncRoom = _urlParams.get('syncRoom');
   var _syncRole = _urlParams.get('syncRole');
-  var _standaloneMode = !!_syncRoom;
+  var _standaloneMode = !!_syncRoom && _transport !== 'postmessage';
   var _bc = null;
   var _peer = null;
   var _peerConns = [];
+  var _positionSyncTimer = null;
+
+  // v13 snapshot-authority state
+  var _snapSeq = 0;            // presenter: monotonic snapshot sequence
+  var _lastSentHash = '';      // presenter: dedupe — only send when state actually changed
+  var _snapDebounce = null;    // presenter: debounce timer after mutations
+  var _snapTick = 0;           // presenter: heartbeat divider (position loop runs at 1s)
+  var _lastAppliedSeq = 0;     // viewer: ignore stale/duplicate snapshots
+  var _lastAppliedHash = '';   // viewer: skip RESTORE when already at presenter's state
+  var SNAP_DEBOUNCE_MS = 500;
+  var SNAP_HEARTBEAT_TICKS = 3; // every 3s (3 × 1s position ticks)
 
   // ═══════════════════════════════════════════════════════
   // LOGGING
@@ -68,6 +86,7 @@
   // SEND TO PARENT (overridden in standalone mode)
   // ═══════════════════════════════════════════════════════
   var _sendToParentBase = function (action, payload) {
+    recordCommandHistory(action, payload);
     if (window.parent === window) return;
     try {
       window.parent.postMessage({
@@ -87,8 +106,13 @@
   // LAYER 1: CANVAS POINTER EVENTS
   // ═══════════════════════════════════════════════════════
   function startCanvasCapture() {
+    // Idempotent: tryInit() and the SET_ROLE presenter handler both call this; without a guard
+    // the presenter binds duplicate document-level pointer listeners → every CANVAS_EVENT (and
+    // its /ws relay) fires twice, causing jittery double-replay on viewers.
+    if (window.__nbCanvasCaptureStarted) return true;
     _canvasEl = document.querySelector('canvas');
     if (!_canvasEl) { log('No canvas found!'); return false; }
+    window.__nbCanvasCaptureStarted = true;
 
     var dragging = false;
     var canvasRect = null;
@@ -132,6 +156,7 @@
       // Double sync: fast + delayed (let PIXI finish animation)
       setTimeout(function () { sendPositionSync(); }, 200);
       setTimeout(function () { sendPositionSync(); }, 600);
+      scheduleSnapshot(); // v13: authoritative state follows every completed gesture
     }, { capture: true, passive: true });
 
     document.addEventListener('pointercancel', function () { dragging = false; }, { capture: true, passive: true });
@@ -228,8 +253,35 @@
     return cur;
   }
 
+  function findMainContainer() {
+    // Known globals. Runtime-verified: physics exposes `__main` (lowercase, NOT *Main);
+    // chemistry exposes its container via the getLabMain() accessor once the lab is live.
+    var candidates = ['__main', 'physicalMain', 'physicsMain', 'chemicalMain'];
+    for (var c = 0; c < candidates.length; c++) {
+      var v = window[candidates[c]];
+      if (v && typeof v === 'object' && typeof v.execute === 'function') return v;
+    }
+    // Chemistry SDK accessor — returns the container only after the engine is instantiated.
+    if (typeof window.getLabMain === 'function') {
+      try { var m = window.getLabMain(); if (m && typeof m.execute === 'function') return m; } catch (e) {}
+    }
+    // Fallback: any *main container (case-insensitive) with execute + children.
+    var keys = Object.keys(window);
+    for (var k = 0; k < keys.length; k++) {
+      var key = keys[k];
+      try {
+        var w = window[key];
+        if (/main$/i.test(key) && w && typeof w === 'object' && typeof w.execute === 'function' && w.children) {
+          log('🔍 Auto-detected main container:', key);
+          return w;
+        }
+      } catch (e) {}
+    }
+    return null;
+  }
+
   function hookExecute() {
-    var cm = window.chemicalMain;
+    var cm = findMainContainer();
     if (!cm || typeof cm.execute !== 'function') return false;
     _origExecute = cm.execute.bind(cm);
 
@@ -250,6 +302,7 @@
         if (path) {
           sendToParent('EXECUTE_CMD', { cmdName: 'DELETE_EQUIPMENT', isDelete: true, identifier: { _path: path } });
           log('⚡ DELETE (path:', JSON.stringify(path), ')');
+          scheduleSnapshot();
         }
         return result;
       }
@@ -266,36 +319,12 @@
         }
         log('⚡', cmdName);
         setTimeout(function () { sendPositionSync(); }, 100);
+        scheduleSnapshot();
       }
-      // Relay one-shot interaction commands (non-whitelisted, fire ≤3x in 2s)
-      if (_isPresenter && !_isSyncing && !RELAY_COMMANDS[cmd] && cmd !== CMD_DELETE) {
-        if (!window.__cmdFreq) window.__cmdFreq = {};
-        if (!window.__cmdSkip) window.__cmdSkip = {};
-        var now = Date.now();
-        if (!window.__cmdSkip[cmd]) {
-          if (!window.__cmdFreq[cmd]) window.__cmdFreq[cmd] = [];
-          window.__cmdFreq[cmd].push(now);
-          window.__cmdFreq[cmd] = window.__cmdFreq[cmd].filter(function(t) { return now - t < 2000; });
-          if (window.__cmdFreq[cmd].length > 3) {
-            window.__cmdSkip[cmd] = true;
-            log('⏭ Skip tick:', cmd.substr(0, 8) + '...');
-          } else {
-            // Smart serialize with PIXI path refs
-            var smartArgs = [cmd];
-            for (var i = 1; i < args.length; i++) {
-              var a = args[i];
-              if (a && typeof a === 'object' && typeof a.x === 'number' && a.parent) {
-                var eqPath = findChildPath(cm, a);
-                smartArgs.push(eqPath ? { __pixiRef: true, path: eqPath } : null);
-              } else {
-                try { smartArgs.push(JSON.parse(JSON.stringify(a))); } catch(e3) { smartArgs.push(null); }
-              }
-            }
-            sendToParent('EXECUTE_CMD', { cmdName: cmd, args: smartArgs });
-            log('⚡🔥', cmd.substr(0, 8) + '...');
-          }
-        }
-      }
+      // [DISABLED v12.3] Relaying NON-whitelisted commands serialized plain-object args that the
+      // viewer's engine then treats as live PIXI display objects → "e.on is not a function" on
+      // replay (spammed the console + broke sync). Whitelisted commands (ADD/CREATE/DELETE) +
+      // DVA actions + periodic POSITION_SYNC reproduce scene state without this speculative path.
       return result;
     };
     log('✓ Layer 2: execute() hooked');
@@ -304,7 +333,7 @@
 
   function replayExecute(payload) {
     if (!payload) return;
-    var cm = window.chemicalMain;
+    var cm = findMainContainer();
     if (!cm || !_origExecute) return;
     _isSyncing = true;
     try {
@@ -357,11 +386,89 @@
   }
 
   // ═══════════════════════════════════════════════════════
+  // v13 — STATE SNAPSHOT (single source of truth)
+  // Presenter serializes the FULL engine state (NBCommand.GET_DATA) and broadcasts it with a
+  // monotonic seq + content hash. Viewers RESTORE_DATA whenever the presenter hash changes.
+  // Event-replay layers stay for smoothness; any divergence they leave self-heals here.
+  // ═══════════════════════════════════════════════════════
+  function djb2(str) {
+    var h = 5381;
+    for (var i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+    return (h >>> 0).toString(36);
+  }
+
+  // Normalize an engine payload to a non-empty serialized string, or null.
+  function serializeState(d) {
+    if (d == null) return null;
+    var s = typeof d === 'string' ? d : JSON.stringify(d);
+    if (!s || s === '{}' || s === 'null' || s === '[]') return null;
+    return s;
+  }
+
+  // Lab-agnostic snapshot read. Chemistry exposes NBCommand + execute(GET_DATA);
+  // physics has no NBCommand and serializes via cm.getData(). Prefer the NBCommand
+  // path when present (chemistry's canonical save format), else the method path.
+  function getStateData() {
+    var cm = findMainContainer();
+    if (!cm) return null;
+    var NB = window.NBCommand;
+    if (NB && 'GET_DATA' in NB && typeof cm.execute === 'function') {
+      try { var s = serializeState(cm.execute(NB.GET_DATA)); if (s) return s; } catch (e) {}
+    }
+    if (typeof cm.getData === 'function') {
+      try { var s2 = serializeState(cm.getData()); if (s2) return s2; } catch (e) {}
+    }
+    return null;
+  }
+
+  function sendSnapshotNow(force) {
+    if (!_isPresenter) return;
+    var data = getStateData();
+    if (data == null) return; // engine not ready / no GET_DATA on this lab build
+    var h = djb2(data);
+    if (!force && h === _lastSentHash) return; // idle — nothing changed, no traffic
+    _lastSentHash = h;
+    _snapSeq++;
+    sendToParent('STATE_SNAPSHOT', { seq: _snapSeq, hash: h, data: data, size: data.length });
+    log('📸 Snapshot #' + _snapSeq, '(' + data.length + 'B, ' + h + ')');
+  }
+
+  function scheduleSnapshot() {
+    if (!_isPresenter) return;
+    if (_snapDebounce) clearTimeout(_snapDebounce);
+    _snapDebounce = setTimeout(function () {
+      _snapDebounce = null;
+      sendSnapshotNow(false);
+    }, SNAP_DEBOUNCE_MS);
+  }
+
+  function applyStateSnapshot(p) {
+    if (_isPresenter || !p || typeof p.data !== 'string' || !p.data) return;
+    if (typeof p.seq === 'number' && p.seq <= _lastAppliedSeq) return; // stale/dup
+    if (typeof p.seq === 'number') _lastAppliedSeq = p.seq;
+    if (p.hash && p.hash === _lastAppliedHash) return; // already at this state
+    var cm = findMainContainer();
+    if (!cm) return;
+    var NB = window.NBCommand;
+    _isSyncing = true;
+    try {
+      if (NB && 'RESTORE_DATA' in NB && typeof cm.execute === 'function') {
+        cm.execute(NB.RESTORE_DATA, p.data);   // chemistry
+      } else if (typeof cm.setData === 'function') {
+        cm.setData(p.data);                    // physics
+      } else { _isSyncing = false; return; }
+      _lastAppliedHash = p.hash || djb2(p.data);
+      log('📥 Snapshot applied #' + p.seq, '(' + p.data.length + 'B)');
+    } catch (e) { log('❌ Snapshot restore error:', e.message); }
+    _isSyncing = false;
+  }
+
+  // ═══════════════════════════════════════════════════════
   // POSITION SYNC (absolute truth from PIXI scene)
   // ═══════════════════════════════════════════════════════
   var _sceneDebugDone = false;
   function sendPositionSync() {
-    var cm = window.chemicalMain;
+    var cm = findMainContainer();
     if (!cm || !_isPresenter) return;
     var root = cm.children || (cm.stage && cm.stage.children) || [];
 
@@ -394,15 +501,21 @@
       }
       data.push(entry);
     }
-    log('📤 Sync:', debugStr);
+    if (window.__nbSyncDebug) log('📤 Sync:', debugStr);
+    // Only emit when the scene actually changed — avoids a constant 1s /ws heartbeat that
+    // floods every subscriber while the lab sits idle.
     if (data.length > 0) {
-      sendToParent('POSITION_SYNC', data);
+      var _posJson = JSON.stringify(data);
+      if (_posJson !== window.__nbLastPosSync) {
+        window.__nbLastPosSync = _posJson;
+        sendToParent('POSITION_SYNC', data);
+      }
     }
   }
 
   function applyPositionSync(data) {
     if (!Array.isArray(data)) return;
-    var cm = window.chemicalMain;
+    var cm = findMainContainer();
     if (!cm) return;
     var root = cm.children || (cm.stage && cm.stage.children) || [];
     _isSyncing = true;
@@ -412,7 +525,7 @@
       if (!node || typeof node.x !== 'number') continue;
       // Level 0: root child
       if (Math.abs(node.x - d.x) > 0.5 || Math.abs(node.y - d.y) > 0.5) {
-        log('📍 [' + d.i + ']: ' + Math.round(node.x) + ',' + Math.round(node.y) + ' → ' + Math.round(d.x) + ',' + Math.round(d.y));
+        if (window.__nbSyncDebug) log('📍 [' + d.i + ']: ' + Math.round(node.x) + ',' + Math.round(node.y) + ' → ' + Math.round(d.x) + ',' + Math.round(d.y));
       }
       node.x = d.x; node.y = d.y;
       if (node.scale && d.sx != null) { node.scale.x = d.sx; node.scale.y = d.sy; }
@@ -423,7 +536,7 @@
           var cn = node.children[cd.i];
           if (!cn || typeof cn.x !== 'number') continue;
           if (Math.abs(cn.x - cd.x) > 0.5 || Math.abs(cn.y - cd.y) > 0.5) {
-            log('📍 [' + d.i + '.' + cd.i + ']: ' + Math.round(cn.x) + ',' + Math.round(cn.y) + ' → ' + Math.round(cd.x) + ',' + Math.round(cd.y));
+            if (window.__nbSyncDebug) log('📍 [' + d.i + '.' + cd.i + ']: ' + Math.round(cn.x) + ',' + Math.round(cn.y) + ' → ' + Math.round(cd.x) + ',' + Math.round(cd.y));
           }
           cn.x = cd.x; cn.y = cd.y;
           if (cn.scale && cd.sx != null) { cn.scale.x = cd.sx; cn.scale.y = cd.sy; }
@@ -450,7 +563,7 @@
           for (var i = 0; i < RELAY_DVA.length; i++) { if (type.indexOf(RELAY_DVA[i]) >= 0) { relay = true; break; } }
           if (relay) {
             var cloned = safeClone({ type: action.type, payload: action.payload });
-            if (cloned) { sendToParent('DISPATCH_ACTION', cloned); log('📦', type); }
+            if (cloned) { sendToParent('DISPATCH_ACTION', cloned); log('📦', type); scheduleSnapshot(); }
           }
         }
       }
@@ -518,8 +631,11 @@
         }
         break;
       case 'POSITION_SYNC':
-        log('📍 Received POSITION_SYNC, items:', msg.payload ? msg.payload.length : 0);
+        if (window.__nbSyncDebug) log('📍 Received POSITION_SYNC, items:', msg.payload ? msg.payload.length : 0);
         applyPositionSync(msg.payload);
+        break;
+      case 'STATE_SNAPSHOT':
+        applyStateSnapshot(msg.payload);
         break;
       case 'STATE_HISTORY':
         // Late-join: replay all past commands
@@ -541,19 +657,57 @@
   // Command history for late-joining viewers
   var _commandHistory = [];
 
+  function recordCommandHistory(action, payload) {
+    if (action !== 'EXECUTE_CMD' && action !== 'DISPATCH_ACTION') return;
+    // Skip commands carrying PIXI object refs — they depend on transient scene paths and are
+    // followed by POSITION_SYNC bursts instead of being safe to replay for late joiners.
+    var hasPixiRef = false;
+    if (payload && payload.args) {
+      for (var h = 0; h < payload.args.length; h++) {
+        if (payload.args[h] && payload.args[h].__pixiRef) { hasPixiRef = true; break; }
+      }
+    }
+    if (!hasPixiRef) {
+      _commandHistory.push({
+        type: MSG_PREFIX, action: action, payload: payload || {},
+        timestamp: Date.now(), userId: _userId, version: BRIDGE_VERSION
+      });
+    }
+  }
+
+  function startPositionSyncLoop() {
+    if (_positionSyncTimer) return;
+    _positionSyncTimer = setInterval(function () {
+      if (!_isPresenter) return;
+      sendPositionSync();
+      // v13 heartbeat: every SNAP_HEARTBEAT_TICKS seconds re-check full state; hash-dedupe in
+      // sendSnapshotNow keeps an idle lab silent, while any missed mutation (dropped event,
+      // failed replay on a viewer) is corrected on the next beat.
+      _snapTick++;
+      if (_snapTick >= SNAP_HEARTBEAT_TICKS) {
+        _snapTick = 0;
+        sendSnapshotNow(false);
+      }
+    }, 1000);
+  }
+
+  function sendStateSnapshot() {
+    if (!_isPresenter) return;
+    // Legacy path first so old-bridge viewers still get something usable…
+    if (_commandHistory.length > 0) {
+      _sendToParentBase('STATE_HISTORY', _commandHistory);
+    }
+    [100, 500, 1200, 2500].forEach(function (delay) {
+      setTimeout(function () { sendPositionSync(); }, delay);
+    });
+    // …then the authoritative snapshot (forced — late-joiner needs it even if hash unchanged).
+    setTimeout(function () { sendSnapshotNow(true); }, 300);
+  }
+
   // Broadcast to BC + WebRTC
   function broadcastEvent(action, payload) {
     var msg = { type: MSG_PREFIX, action: action, payload: payload || {}, timestamp: Date.now(), userId: _userId };
-    // Record non-canvas commands for late joiners (skip __pixiRef interactions)
-    if (action === 'EXECUTE_CMD' || action === 'DISPATCH_ACTION') {
-      var hasPixiRef = false;
-      if (payload && payload.args) {
-        for (var h = 0; h < payload.args.length; h++) {
-          if (payload.args[h] && payload.args[h].__pixiRef) { hasPixiRef = true; break; }
-        }
-      }
-      if (!hasPixiRef) _commandHistory.push(msg);
-    }
+    // (History recording moved to recordCommandHistory via _sendToParentBase — works in SDK mode too.)
     if (_bc) { try { _bc.postMessage(msg); } catch (e) {} }
     for (var i = 0; i < _peerConns.length; i++) {
       try { if (_peerConns[i].open) _peerConns[i].send(JSON.stringify(msg)); } catch (e) {}
@@ -579,6 +733,8 @@
         [300, 800, 1500, 3000].forEach(function(delay) {
           setTimeout(function () { sendPositionSync(); }, delay);
         });
+        // v13: authoritative snapshot for the new peer
+        setTimeout(function () { sendSnapshotNow(true); }, 500);
       }
     });
     conn.on('data', function (data) {
@@ -644,12 +800,7 @@
       broadcastEvent(action, payload);
     };
     log('✓ Presenter mode — broadcasting enabled');
-    // Periodic position sync every 1s
-    setInterval(function () {
-      if (_isPresenter) {
-        sendPositionSync();
-      }
-    }, 1000);
+    startPositionSyncLoop();
   }
 
   // Block all user interactions on viewer (student)
@@ -730,7 +881,17 @@
         _isPresenter = msg.payload.role === 'presenter';
         _userId = msg.payload.userId || _userId;
         log('Role:', _isPresenter ? 'PRESENTER' : 'VIEWER');
-        if (_isPresenter) startCanvasCapture();
+        if (_isPresenter) {
+          startCanvasCapture();
+          startPositionSyncLoop();
+          sendStateSnapshot();
+        } else {
+          if (_positionSyncTimer) {
+            clearInterval(_positionSyncTimer);
+            _positionSyncTimer = null;
+          }
+          lockViewerUI();
+        }
         break;
       case 'CANVAS_EVENT':
         if (!_isPresenter) { _isSyncing = true; replayCanvasEvent(msg.payload); _isSyncing = false; }
@@ -741,6 +902,18 @@
       case 'DISPATCH_ACTION':
         if (!_isPresenter) replayDispatch(msg.payload);
         break;
+      case 'POSITION_SYNC':
+        if (!_isPresenter) applyPositionSync(msg.payload);
+        break;
+      case 'STATE_SNAPSHOT':
+        if (!_isPresenter) applyStateSnapshot(msg.payload);
+        break;
+      case 'STATE_HISTORY':
+        if (!_isPresenter) handleSyncMessage(msg);
+        break;
+      case 'REQUEST_STATE':
+        if (_isPresenter) sendStateSnapshot();
+        break;
     }
   });
 
@@ -750,7 +923,7 @@
   function tryInit() {
     if (_ready) return;
     if (Date.now() - _initStartTime > MAX_INIT_WAIT) { _ready = true; return; }
-    var cm = window.chemicalMain;
+    var cm = findMainContainer();
     if (!cm || !document.querySelector('canvas')) return;
 
     var hooks = { canvas: startCanvasCapture(), execute: hookExecute(), dispatch: hookDispatch() };

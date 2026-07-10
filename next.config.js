@@ -3,6 +3,11 @@ const nextConfig = {
     reactStrictMode: false,
     trailingSlash: false,
 
+    // Next 16 turbopack dev: the static-route indicator crashes on the `isrManifest`
+    // HMR message (handleStaticIndicator → "Cannot read properties of undefined"),
+    // which aborts client hydration so page effects never run. Disable it in dev.
+    devIndicators: false,
+
     // Allow serving large static files
     experimental: {},
 

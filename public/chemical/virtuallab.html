@@ -5,6 +5,45 @@
   <base href="/" />
 
   <script>
+    /* [TOUCH ASSET FIX] Force full-size Pixi assets on touch devices. The chemical engine sets
+       PIXI.settings.IMAGE_SCALE="@0.5x" on touch (nobook_chemical.min.js: `_.touchDevice() ? ... "@0.5x"`),
+       but this build ships only full-size PNGs, so @0.5x asset paths 404 and dropped equipment
+       silently fails to render. Intercept the setter -> null so the engine loads full-size assets. */
+    (function () {
+      function patchPixiImageScale(pixi) {
+        if (!pixi || !pixi.settings || pixi.settings.__nbUseFullSizeAssets) return;
+        try {
+          var imageScale = pixi.settings.IMAGE_SCALE || null;
+          Object.defineProperty(pixi.settings, 'IMAGE_SCALE', {
+            configurable: true,
+            get: function () { return imageScale; },
+            set: function (value) { imageScale = value === '@0.5x' ? null : value; },
+          });
+          pixi.settings.IMAGE_SCALE = null;
+          pixi.settings.__nbUseFullSizeAssets = true;
+        } catch (error) {
+          try { pixi.settings.IMAGE_SCALE = null; pixi.settings.__nbUseFullSizeAssets = true; } catch (e) {}
+        }
+      }
+      patchPixiImageScale(window.PIXI);
+      var pixiValue = window.PIXI;
+      try {
+        Object.defineProperty(window, 'PIXI', {
+          configurable: true,
+          get: function () { return pixiValue; },
+          set: function (value) { pixiValue = value; patchPixiImageScale(value); },
+        });
+      } catch (error) {}
+      var attempts = 0;
+      var timer = setInterval(function () {
+        attempts += 1;
+        patchPixiImageScale(window.PIXI);
+        if ((window.PIXI && window.PIXI.settings && window.PIXI.settings.__nbUseFullSizeAssets) || attempts > 1000) clearInterval(timer);
+      }, 10);
+    })();
+  </script>
+
+  <script>
     /* [SAFARI IFRAME FIX] Recover from webpack ChunkLoadError. Safari aborts async chunks in a
        cross-origin iframe (ITP / cache partitioning) -> ChunkLoadError. Reload once per session;
        auto-reset the guard after a clean load so a later navigation can still recover. */

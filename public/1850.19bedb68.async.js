@@ -284,7 +284,7 @@
                         _e = z[1],
                         $ = (0, _.useRef)(null),
                         D, S, v = 0,
-                        ae = 250,
+                        ae = 500,
                         Y, E = {
                             x: 40,
                             y: 40
@@ -293,7 +293,13 @@
                             x: 0,
                             y: 0
                         },
-                        t, X = document.querySelector("#root");
+                        t, X = document.querySelector("#root"),
+                        Oe = null,
+                        se = null,
+                        ue = 0,
+                        pe = null,
+                        ge = null,
+                        me = 0;
                     (0, _.useEffect)(() => {
                         _e(f)
                     }, [f]), (0, _.useEffect)(() => {
@@ -312,13 +318,51 @@
                             var a = r.target;
                             return a.tagName === "path"
                         },
+                        he = r => {
+                            var a = r.changedTouches && r.changedTouches[0] || r.touches && r.touches[0] || r;
+                            return {
+                                x: a && a.pageX || 0,
+                                y: a && a.pageY || 0
+                            }
+                        },
+                        be = r => {
+                            try {
+                                return (0, N.wV)(r.target, y().eqItem)
+                            } catch (a) {
+                                return null
+                            }
+                        },
+                        ve = (r, a) => {
+                            var g = new Date().getTime();
+                            return !r || (pe === a || ge === r) && g - me < 500 ? !1 : (pe = a, ge = r, me = g, M(r), !0)
+                        },
+                        de = r => {
+                            var a = be(r),
+                                g = he(r);
+                            a ? (Oe = a.dataset.index, c[Oe] && (c[Oe].isClickThreeModelIcon = ne(r)), se = g, ue = new Date().getTime()) : (Oe = null, se = null, ue = 0)
+                        },
+                        we = () => {
+                            Oe = null, se = null, ue = 0
+                        },
+                        ye = r => {
+                            if (Oe !== null && se) {
+                                var a = be(r),
+                                    g = he(r),
+                                    O = a ? a.dataset.index : Oe,
+                                    ee = c[Oe],
+                                    fe = Math.abs(se.x - g.x),
+                                    Ce = Math.abs(se.y - g.y),
+                                    Ie = new Date().getTime() - ue;
+                                (!a || O === Oe) && v === 0 && Ie < 800 && fe < E.x && Ce < E.y && ve(ee, Oe), we()
+                            }
+                        },
                         oe = (r, a) => {
                             try {
-                                var g = (0, N.wV)(r.target, y().eqItem);
+                                var g = be(r);
                                 if (r.target.classList !== null && g) {
                                     Y = new Date().getTime(), x = a, v = 0;
                                     var O = g.dataset.index;
-                                    S = c[O], ne(r) ? S.isClickThreeModelIcon = !0 : S.isClickThreeModelIcon = !1, ie(S)
+                                    Oe = O, se = a, ue = Y, S = c[O], ne(r) ? S.isClickThreeModelIcon = !0 : S.isClickThreeModelIcon = !1, ie(S)
                                 }
                             } catch (ee) {
                                 x = a, v = 0, t && t.parentElement && document.body.removeChild(t)
@@ -333,7 +377,7 @@
                         },
                         le = (r, a) => {
                             var g = new Date().getTime() - Y;
-                            v === 0 && g < ae && Math.abs(x.y - a.y) < E.y && M(S), v === 1 && x.x - a.x > E.x && M(S, a), t && t.parentElement && (document.body.removeChild(t), t = null)
+                            v === 0 && g < ae && Math.abs(x.y - a.y) < E.y && ve(S, Oe), v === 1 && x.x - a.x > E.x && M(S, a), t && t.parentElement && (document.body.removeChild(t), t = null)
                         };
                     (0, _.useEffect)(() => {
                         var r = $.current;
@@ -341,7 +385,10 @@
                             start: oe,
                             move: re,
                             end: le
-                        })), () => {
+                        }), r.addEventListener("touchstart", de, {
+                            passive: !0
+                        }), r.addEventListener("touchend", ye), r.addEventListener("touchcancel", we)), () => {
+                            r && (r.removeEventListener("touchstart", de), r.removeEventListener("touchend", ye), r.removeEventListener("touchcancel", we)),
                             D && (D.destroy(), D = null), t && t.parentElement && (document.body.removeChild(t), t = null)
                         }
                     }, [$, c]), (0, _.useEffect)(() => {

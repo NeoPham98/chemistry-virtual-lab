@@ -109,6 +109,64 @@
       }
     })();
 
+    // === LOCAL FIX: Use bundled full-size Pixi assets on touch devices ===
+    // The upstream chemical engine switches touch devices to "@0.5x" assets, but this
+    // repo only contains full-size PNG files. Without this guard, tapping equipment
+    // tries to load paths like /libs/chem/assets/container/@0.5xRoundBottomFlask.png
+    // and the equipment silently fails to render after the touch event succeeds.
+    (function () {
+      function patchPixiImageScale(pixi) {
+        if (!pixi || !pixi.settings || pixi.settings.__nbUseFullSizeAssets) return;
+
+        try {
+          var imageScale = pixi.settings.IMAGE_SCALE || null;
+
+          Object.defineProperty(pixi.settings, 'IMAGE_SCALE', {
+            configurable: true,
+            get: function () {
+              return imageScale;
+            },
+            set: function (value) {
+              imageScale = value === '@0.5x' ? null : value;
+            },
+          });
+
+          pixi.settings.IMAGE_SCALE = null;
+          pixi.settings.__nbUseFullSizeAssets = true;
+        } catch (error) {
+          try {
+            pixi.settings.IMAGE_SCALE = null;
+            pixi.settings.__nbUseFullSizeAssets = true;
+          } catch (fallbackError) { }
+        }
+      }
+
+      var pixiValue = window.PIXI;
+      patchPixiImageScale(pixiValue);
+
+      try {
+        Object.defineProperty(window, 'PIXI', {
+          configurable: true,
+          get: function () {
+            return pixiValue;
+          },
+          set: function (value) {
+            pixiValue = value;
+            patchPixiImageScale(value);
+          },
+        });
+      } catch (error) { }
+
+      var attempts = 0;
+      var timer = setInterval(function () {
+        attempts += 1;
+        patchPixiImageScale(window.PIXI);
+        if ((window.PIXI && window.PIXI.settings && window.PIXI.settings.__nbUseFullSizeAssets) || attempts > 1000) {
+          clearInterval(timer);
+        }
+      }, 10);
+    })();
+
     window.__nbExperimentState = {
       selected: null,
       restoreApplied: false,
